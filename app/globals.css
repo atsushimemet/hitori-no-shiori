@@ -24,6 +24,7 @@ html {
 body {
   margin: 0;
   background:
+    radial-gradient(circle at 84% 10%, rgba(39, 56, 70, 0.08), transparent 28rem),
     linear-gradient(180deg, rgba(244, 238, 228, 0.74), rgba(251, 250, 246, 0) 420px),
     var(--paper);
   color: var(--ink);
@@ -90,6 +91,7 @@ a {
   border-radius: 6px 6px 2px 2px;
   background: linear-gradient(180deg, var(--coffee), #b5855f);
   box-shadow: inset 0 -8px 0 rgba(255, 253, 248, 0.28);
+  animation: bookmarkBreathe 4.8s ease-in-out infinite;
 }
 
 .header-nav {
@@ -297,9 +299,11 @@ h2 {
   border-color: rgba(63, 42, 32, 0.48);
   background: var(--navy);
   color: var(--white);
+  animation: softPress 360ms ease;
 }
 
 .hero-visual {
+  position: relative;
   grid-area: visual;
   align-self: center;
   margin: 0;
@@ -307,18 +311,57 @@ h2 {
   border-radius: 8px;
   background: var(--milk);
   box-shadow: var(--shadow);
+  animation: quietFloat 8s ease-in-out infinite;
 }
 
 .hero-visual img {
   aspect-ratio: 4 / 5;
   height: 100%;
   object-fit: cover;
+  transform: scale(1.01);
+}
+
+.quiet-orbit {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  width: 72px;
+  height: 72px;
+  border: 1px solid rgba(255, 253, 248, 0.58);
+  border-radius: 999px;
+  opacity: 0.62;
+  animation: slowTurn 10s linear infinite;
+}
+
+.quiet-orbit::after {
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--white);
 }
 
 .section-heading {
   display: grid;
   justify-items: center;
   text-align: center;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 620ms ease,
+    transform 620ms ease;
+  transition-delay: var(--delay);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .example-grid {
@@ -346,10 +389,19 @@ h2 {
   align-content: space-between;
   overflow: hidden;
   padding: 28px;
+  opacity: 0;
+  transform: translateY(18px);
   transform-style: preserve-3d;
   transition:
-    transform 260ms ease,
+    opacity 620ms ease,
+    transform 620ms ease,
     box-shadow 260ms ease;
+  transition-delay: var(--card-delay);
+}
+
+.example-card.is-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .example-card::before {
@@ -437,6 +489,11 @@ h2 {
   margin-top: 34px;
 }
 
+.place-grid .reveal,
+.place-grid article {
+  height: 100%;
+}
+
 .place-grid article {
   min-height: 116px;
   display: grid;
@@ -512,7 +569,7 @@ h2 {
 .plan-card.is-awake {
   border-color: rgba(39, 56, 70, 0.38);
   box-shadow: 0 24px 62px rgba(39, 56, 70, 0.14);
-  transform: translateY(-3px);
+  transform: translateY(-3px) scale(1.015);
 }
 
 .plan-title {
@@ -580,6 +637,64 @@ h2 {
   border-top: 1px solid rgba(110, 76, 55, 0.12);
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+@keyframes bookmarkBreathe {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  50% {
+    transform: scaleY(0.88);
+  }
+}
+
+@keyframes quietFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes slowTurn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes softPress {
+  0% {
+    transform: scale(1);
+  }
+
+  48% {
+    transform: scale(0.97);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes bookOpen {
+  0% {
+    transform: perspective(900px) rotateY(-72deg) scale(0.97);
+    box-shadow: 0 14px 30px rgba(63, 42, 32, 0.05);
+  }
+
+  64% {
+    transform: perspective(900px) rotateY(4deg) scale(1);
+  }
+
+  100% {
+    transform: perspective(900px) rotateY(0) scale(1);
+    opacity: 1;
+  }
 }
 
 @media (max-width: 920px) {
@@ -701,16 +816,9 @@ h2 {
     opacity: 0.68;
   }
 
-  .example-card:nth-child(2) {
-    animation-delay: 120ms;
-  }
-
-  .example-card:nth-child(3) {
-    animation-delay: 240ms;
-  }
-
   .example-card.is-visible {
     animation: bookOpen 720ms cubic-bezier(0.22, 0.78, 0.26, 1) forwards;
+    animation-delay: var(--card-delay);
   }
 
   .example-card::before {
@@ -753,22 +861,6 @@ h2 {
   }
 }
 
-@keyframes bookOpen {
-  0% {
-    transform: perspective(900px) rotateY(-72deg) scale(0.97);
-    box-shadow: 0 14px 30px rgba(63, 42, 32, 0.05);
-  }
-
-  64% {
-    transform: perspective(900px) rotateY(4deg) scale(1);
-  }
-
-  100% {
-    transform: perspective(900px) rotateY(0) scale(1);
-    opacity: 1;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -779,6 +871,7 @@ h2 {
     transition-duration: 0.001ms !important;
   }
 
+  .reveal,
   .example-card {
     transform: none !important;
     opacity: 1 !important;

@@ -1,0 +1,16 @@
+:root {
+  --color-paper: 247 243 234;
+  --color-white: 255 255 255;
+  --color-ink: 43 41 38;
+  --color-coffee: 91 67 48;
+  --color-bark: 125 98 75;
+  --color-mist: 224 230 229;
+  --color-navy: 67 82 105;
+
+  --font-sans: "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP";
+  --font-serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP";
+
+  --space-page-x: clamp(1.25rem, 4vw, 4rem);
+  --space-page-y: clamp(3rem, 8vw, 7rem);
+  --radius-control: 0.5rem;
+}

@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ひとりの栞</title>
+    <meta
+      name="description"
+      content="今の気分から、ひとり時間を提案するWebサービス。"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="ひとりの栞">
+        <span class="brand-mark"></span>
+        <span>ひとりの栞</span>
+      </a>
+      <nav class="header-nav" aria-label="メイン">
+        <a href="#how">使い方</a>
+        <a href="#examples">提案例</a>
+        <a href="#login">ログイン</a>
+      </nav>
+      <a class="header-cta" href="#create">栞を作る</a>
+    </header>
+
+    <main id="top">
+      <section class="hero section" id="create">
+        <div class="hero-copy">
+          <p class="eyebrow">ひとり時間の案内</p>
+          <h1>
+            <span>あなたの栞を</span>
+            <span>作りましょう</span>
+          </h1>
+          <p>今の気分から、ひとり時間を提案します。</p>
+        </div>
+
+        <div class="hero-panel">
+          <form class="mood-form" id="moodForm">
+            <label for="moodInput">今日は、どんな時間にしますか？</label>
+            <div class="input-row">
+              <input
+                id="moodInput"
+                name="mood"
+                type="text"
+                placeholder="例：静かな喫茶店で本を読みたい"
+                autocomplete="off"
+              />
+              <button type="submit">提案してもらう</button>
+            </div>
+            <p class="form-note" id="formNote" aria-live="polite"></p>
+          </form>
+
+          <div class="chips" aria-label="気分の候補">
+            <button type="button" data-mood="疲れをほどきたい">疲れをほどきたい</button>
+            <button type="button" data-mood="考えを整えたい">考えを整えたい</button>
+            <button type="button" data-mood="作業に集中したい">作業に集中したい</button>
+            <button type="button" data-mood="本屋で発想を得たい">本屋で発想を得たい</button>
+            <button type="button" data-mood="夢を進めたい">夢を進めたい</button>
+            <button type="button" data-mood="雰囲気のいいお店で食事を楽しみたい">
+              雰囲気のいいお店で食事を楽しみたい
+            </button>
+            <button type="button" data-mood="静かに飲みたい">静かに飲みたい</button>
+          </div>
+        </div>
+
+        <figure class="hero-visual">
+          <img
+            src="assets/hero-stillness.png"
+            alt="窓辺の本とノートとコーヒー"
+          />
+        </figure>
+      </section>
+
+      <section class="section examples" id="examples">
+        <div class="section-heading">
+          <p class="eyebrow">sample</p>
+          <h2>たとえば、こんな栞。</h2>
+        </div>
+        <div class="example-grid" aria-label="提案例">
+          <article class="example-card">
+            <span>夕方の栞</span>
+            <p>喫茶店で、本を読む。</p>
+            <small>90分</small>
+          </article>
+          <article class="example-card">
+            <span>休日の栞</span>
+            <p>作業して、本屋へ行く。</p>
+            <small>半日</small>
+          </article>
+          <article class="example-card">
+            <span>夜の栞</span>
+            <p>静かに飲んで、考える。</p>
+            <small>夜</small>
+          </article>
+        </div>
+      </section>
+
+      <section class="section dialogue" id="how">
+        <div class="section-heading">
+          <p class="eyebrow">dialogue</p>
+          <h2>言葉にできなくても、大丈夫。</h2>
+          <p>対話しながら、あなたのひとり時間を設計します。</p>
+        </div>
+        <div class="dialogue-board">
+          <fieldset class="choice-group">
+            <legend>今の気分</legend>
+            <button type="button">疲れている</button>
+            <button type="button">焦っている</button>
+            <button type="button">何か始めたい</button>
+            <button type="button">整えたい</button>
+          </fieldset>
+          <fieldset class="choice-group">
+            <legend>時間</legend>
+            <button type="button">30分</button>
+            <button type="button">1時間</button>
+            <button type="button">2時間</button>
+            <button type="button">半日</button>
+          </fieldset>
+          <fieldset class="choice-group">
+            <legend>したいこと</legend>
+            <button type="button">読む</button>
+            <button type="button">書く</button>
+            <button type="button">考える</button>
+            <button type="button">作業する</button>
+            <button type="button">食べる</button>
+            <button type="button">飲む</button>
+          </fieldset>
+        </div>
+        <a class="section-cta" href="#create">対話をはじめる</a>
+      </section>
+
+      <section class="section places">
+        <div class="section-heading">
+          <p class="eyebrow">places</p>
+          <h2>場所ではなく、過ごし方。</h2>
+        </div>
+        <div class="place-grid">
+          <article><strong>純喫茶</strong><span>読む</span></article>
+          <article><strong>本屋</strong><span>出会う</span></article>
+          <article><strong>食事処</strong><span>満たす</span></article>
+          <article><strong>バー</strong><span>ほどく</span></article>
+          <article><strong>作業場所</strong><span>進める</span></article>
+          <article><strong>散歩</strong><span>戻る</span></article>
+        </div>
+      </section>
+
+      <section class="section value">
+        <div class="section-heading">
+          <p class="eyebrow">value</p>
+          <h2>探すより、作る。</h2>
+          <p>ひとりの栞は、店ではなく時間を提案します。</p>
+        </div>
+        <div class="compare">
+          <div>
+            <span>通常の検索</span>
+            <p>店を探す</p>
+            <p>比べる</p>
+            <p>決める</p>
+          </div>
+          <div>
+            <span>ひとりの栞</span>
+            <p>気分を入れる</p>
+            <p>時間が届く</p>
+            <p>自分に戻る</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section preview">
+        <div class="section-heading">
+          <p class="eyebrow">preview</p>
+          <h2>こんな栞が届きます。</h2>
+        </div>
+        <article class="plan-card" id="planCard">
+          <div class="plan-title">
+            <span>今日の栞</span>
+            <strong>少し休んで、少し進む。</strong>
+          </div>
+          <ol class="timeline">
+            <li><time>17:30</time><span>喫茶店で読む</span></li>
+            <li><time>18:30</time><span>本屋を歩く</span></li>
+            <li><time>19:00</time><span>食事をしながら書く</span></li>
+          </ol>
+          <p class="belongings">本 / ノート / 小さな予定</p>
+        </article>
+      </section>
+
+      <section class="section final-cta">
+        <h2>今日の栞を作りましょう。</h2>
+        <p>今の気分から、はじめられます。</p>
+        <a class="section-cta" href="#create">栞を作る</a>
+      </section>
+    </main>
+
+    <footer class="site-footer" id="login">
+      <span>ひとりの栞</span>
+      <a href="#top">上へ</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -11,6 +11,7 @@ type TypewriterState = {
 
 type UseTypewriterOptions = {
   prompts: readonly string[];
+  paused?: boolean;
 };
 
 const TYPE_DELAY = 54;
@@ -19,7 +20,7 @@ const COMPLETE_DELAY = 1480;
 const NEXT_PROMPT_DELAY = 420;
 const REDUCED_MOTION_DELAY = 2600;
 
-export function useTypewriter({ prompts }: UseTypewriterOptions): TypewriterState {
+export function useTypewriter({ prompts, paused = false }: UseTypewriterOptions): TypewriterState {
   const shouldReduceMotion = useReducedMotion();
   const [promptIndex, setPromptIndex] = useState(0);
   const [charIndex, setCharIndex] = useState(0);
@@ -31,7 +32,7 @@ export function useTypewriter({ prompts }: UseTypewriterOptions): TypewriterStat
     : characters.slice(0, charIndex).join("");
 
   useEffect(() => {
-    if (prompts.length === 0) {
+    if (prompts.length === 0 || paused) {
       return undefined;
     }
 
@@ -71,7 +72,7 @@ export function useTypewriter({ prompts }: UseTypewriterOptions): TypewriterStat
     }, delay);
 
     return () => window.clearTimeout(timeout);
-  }, [charIndex, characters.length, isDeleting, prompts.length, shouldReduceMotion]);
+  }, [charIndex, characters.length, isDeleting, paused, prompts.length, shouldReduceMotion]);
 
   return {
     text,

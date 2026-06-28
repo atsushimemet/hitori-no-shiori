@@ -1,14 +1,16 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { useTypewriter } from "@/hooks/useTypewriter";
 import { promptExamples } from "@/lib/prompts";
 
-export function TypewriterText() {
+type TypewriterTextProps = {
+  text: string;
+  promptIndex: number;
+  isDeleting: boolean;
+};
+
+export function TypewriterText({ text, promptIndex, isDeleting }: TypewriterTextProps) {
   const shouldReduceMotion = useReducedMotion();
-  const { text, promptIndex, isDeleting } = useTypewriter({
-    prompts: promptExamples,
-  });
 
   return (
     <div className="flex min-h-[6.5rem] flex-col justify-between gap-5">

@@ -6,12 +6,22 @@ import { BookmarkIntro } from "@/components/hero/BookmarkIntro";
 import { HeroCTA } from "@/components/hero/HeroCTA";
 import { PromptBox } from "@/components/hero/PromptBox";
 import { PromptExamples } from "@/components/hero/PromptExamples";
+import { ThinkingState } from "@/components/hero/ThinkingState";
 import { TypewriterText } from "@/components/hero/TypewriterText";
+import { usePromptInteraction } from "@/hooks/usePromptInteraction";
+import { useTypewriter } from "@/hooks/useTypewriter";
+import { promptExamples } from "@/lib/prompts";
 
 export function Hero() {
   const [isIntroComplete, setIsIntroComplete] = useState(false);
   const shouldReduceMotion = useReducedMotion();
   const contentDelay = shouldReduceMotion ? 0 : 0.08;
+  const promptInteraction = usePromptInteraction();
+  const typewriter = useTypewriter({
+    paused: promptInteraction.isTypewriterPaused,
+    prompts: promptExamples,
+  });
+  const fallbackPrompt = typewriter.text.trim() || promptExamples[typewriter.promptIndex] || "";
 
   return (
     <main className="flex min-h-screen items-center justify-center px-[var(--space-page-x)] py-[var(--space-page-y)]">
@@ -35,12 +45,29 @@ export function Hero() {
             今の気分からひとり時間を提案します
           </p>
           <div className="mt-10 w-full max-w-xl">
-            <PromptBox>
-              <TypewriterText />
+            <PromptBox
+              onBlur={promptInteraction.handleBlur}
+              onChange={promptInteraction.handleChange}
+              onFocus={promptInteraction.handleFocus}
+              onMouseEnter={promptInteraction.handleMouseEnter}
+              onMouseLeave={promptInteraction.handleMouseLeave}
+              onSubmit={(event) => promptInteraction.handleSubmit(event, fallbackPrompt)}
+              state={promptInteraction.state}
+              value={promptInteraction.value}
+            >
+              <TypewriterText
+                isDeleting={typewriter.isDeleting}
+                promptIndex={typewriter.promptIndex}
+                text={typewriter.text}
+              />
             </PromptBox>
             <PromptExamples />
           </div>
-          <HeroCTA />
+          <HeroCTA
+            onClick={() => promptInteraction.handleSubmit(undefined, fallbackPrompt)}
+            state={promptInteraction.state}
+          />
+          {promptInteraction.state === "submitted" ? <ThinkingState /> : null}
         </motion.div>
       </section>
     </main>

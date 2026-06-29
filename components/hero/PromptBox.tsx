@@ -7,6 +7,7 @@ import type { PromptInteractionState } from "@/hooks/usePromptInteraction";
 
 type PromptBoxProps = {
   children?: ReactNode;
+  layoutId?: string;
   state: PromptInteractionState;
   value: string;
   onMouseEnter: () => void;
@@ -27,6 +28,7 @@ const stateStyles: Record<PromptInteractionState, string> = {
 
 export function PromptBox({
   children,
+  layoutId,
   state,
   value,
   onMouseEnter,
@@ -56,8 +58,9 @@ export function PromptBox({
       transition={{ delay: shouldReduceMotion ? 0 : 0.12, duration: 0.46, ease: [0.4, 0, 0.2, 1] }}
       whileHover={shouldReduceMotion || isSubmitted ? undefined : { y: -2 }}
     >
-      <div
+      <motion.div
         className="relative min-h-44 w-full cursor-text rounded-xl border border-transparent bg-paper/45 px-5 py-5 transition-colors group-focus-within:bg-white/75 sm:min-h-48 sm:px-7 sm:py-6"
+        layoutId={layoutId}
         onClick={() => textareaRef.current?.focus()}
       >
         <motion.div
@@ -89,7 +92,7 @@ export function PromptBox({
           transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
           value={value}
         />
-      </div>
+      </motion.div>
     </motion.form>
   );
 }

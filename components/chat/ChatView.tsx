@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { mockAssistantQuestion } from "@/lib/mockChat";
+import { mockAssistantBarListMessage, mockAssistantQuestion } from "@/lib/mockChat";
 
 type ChatViewProps = {
   userMessage: string;
@@ -18,13 +19,16 @@ type Message = {
 };
 
 const ASSISTANT_REPLY_DELAY = 1500;
+const ROUTE_TRANSITION_DELAY = 1200;
 
 export function ChatView({ userMessage }: ChatViewProps) {
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const conversationRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [composerValue, setComposerValue] = useState("");
   const [isAssistantLoading, setIsAssistantLoading] = useState(true);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       content: userMessage,
@@ -60,7 +64,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
   function handleComposerSubmit() {
     const nextMessage = composerValue.trim();
 
-    if (!nextMessage || isAssistantLoading) {
+    if (!nextMessage || isAssistantLoading || isNavigating) {
       return;
     }
 
@@ -74,11 +78,34 @@ export function ChatView({ userMessage }: ChatViewProps) {
     ]);
     setComposerValue("");
     setIsAssistantLoading(true);
+
+    window.setTimeout(
+      () => {
+        setMessages((current) => [
+          ...current,
+          {
+            content: mockAssistantBarListMessage,
+            id: "assistant-bar-list-message",
+            role: "assistant",
+          },
+        ]);
+        setIsAssistantLoading(false);
+        setIsNavigating(true);
+
+        window.setTimeout(
+          () => {
+            router.push("/casual-bar");
+          },
+          shouldReduceMotion ? 250 : ROUTE_TRANSITION_DELAY,
+        );
+      },
+      shouldReduceMotion ? 400 : ASSISTANT_REPLY_DELAY,
+    );
   }
 
   return (
     <motion.main
-      animate={{ opacity: 1, y: 0 }}
+      animate={{ opacity: isNavigating ? 0 : 1, y: isNavigating && !shouldReduceMotion ? -10 : 0 }}
       className="flex min-h-screen flex-col bg-transparent px-[var(--space-page-x)] py-6 sm:py-8"
       initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
       transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.4, 0, 0.2, 1] }}
@@ -113,7 +140,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
           </AnimatePresence>
         </div>
         <ChatComposer
-          disabled={isAssistantLoading}
+          disabled={isAssistantLoading || isNavigating}
           onChange={setComposerValue}
           onSubmit={handleComposerSubmit}
           ref={composerRef}

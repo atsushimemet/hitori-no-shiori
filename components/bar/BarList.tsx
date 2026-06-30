@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion/react";
 import { BarCard } from "@/components/bar/BarCard";
 import { CarouselShell } from "@/components/carousel/CarouselShell";
@@ -22,14 +23,33 @@ const fadeVariants: Variants = {
 
 const fadeTransition = { duration: 0.3, ease: "easeInOut" as const };
 
-export function BarList() {
+type BarListProps = {
+  onViewedAll?: () => void;
+};
+
+export function BarList({ onViewedAll }: BarListProps) {
   const shouldReduceMotion = useReducedMotion();
   const bars = mockBars.slice(0, 3);
   const api = useCarousel({ count: bars.length, autoPlayMs: 5500 });
+  const viewedIndexesRef = useRef(new Set([0]));
+  const [hasViewedAll, setHasViewedAll] = useState(bars.length <= 1);
   const bar = bars[api.index];
   const variants = shouldReduceMotion ? fadeVariants : turnVariants;
   const transition = shouldReduceMotion ? fadeTransition : turnTransition;
   const origin = api.direction > 0 ? "left center" : "right center";
+
+  useEffect(() => {
+    viewedIndexesRef.current.add(api.index);
+    if (viewedIndexesRef.current.size >= bars.length) {
+      setHasViewedAll(true);
+    }
+  }, [api.index, bars.length]);
+
+  useEffect(() => {
+    if (hasViewedAll) {
+      onViewedAll?.();
+    }
+  }, [hasViewedAll, onViewedAll]);
 
   return (
     <CarouselShell

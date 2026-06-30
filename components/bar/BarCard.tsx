@@ -3,13 +3,16 @@
 import { ExternalLink } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { duration, ease } from "@/components/motion/tokens";
+import { cn } from "@/lib/cn";
 import type { MockBar } from "@/lib/mockBars";
 
 type BarCardProps = {
   bar: MockBar;
+  className?: string;
+  reveal?: boolean;
 };
 
-export function BarCard({ bar }: BarCardProps) {
+export function BarCard({ bar, className, reveal = true }: BarCardProps) {
   const shouldReduceMotion = useReducedMotion();
   const cardVariants = {
     hidden: shouldReduceMotion
@@ -55,7 +58,12 @@ export function BarCard({ bar }: BarCardProps) {
 
   return (
     <motion.article
-      className="rounded-lg border border-coffee/12 bg-white/80 p-5 text-left shadow-soft backdrop-blur transition-colors hover:border-coffee/20 sm:p-6"
+      animate="show"
+      className={cn(
+        "rounded-lg border border-coffee/12 bg-white/80 p-5 text-left shadow-soft backdrop-blur transition-colors hover:border-coffee/20 sm:p-6",
+        className,
+      )}
+      initial={reveal ? "hidden" : "show"}
       transition={{ duration: duration.micro, ease: ease.gentle }}
       variants={cardVariants}
       whileHover={
@@ -116,10 +124,8 @@ export function BarCard({ bar }: BarCardProps) {
           variants={lineVariants}
         />
         <p className="text-xs font-medium text-bark/70">おすすめ記事 / SNS</p>
-        <div className="mt-2 space-y-1 text-sm leading-7 text-ink/72">
-          <p>—</p>
+        <div className="mt-2 space-y-1 text-sm leading-6 text-ink/72">
           <p>{bar.recommendedArticle}</p>
-          <p>—</p>
           <p>Instagram</p>
         </div>
       </div>

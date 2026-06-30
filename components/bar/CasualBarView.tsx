@@ -1,8 +1,18 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { BarList } from "@/components/bar/BarList";
 import { choreo, duration, ease } from "@/components/motion/tokens";
+
+const casualBarTheme: CSSProperties = {
+  ["--shiori-cream" as string]: "#f7f3ea",
+  ["--shiori-paper" as string]: "#fbfaf6",
+  ["--shiori-ink" as string]: "#2b2926",
+  ["--shiori-ink-soft" as string]: "#7d624b",
+  ["--shiori-accent" as string]: "#5b4330",
+  ["--shiori-line" as string]: "#dfd6c8",
+};
 
 export function CasualBarView() {
   const shouldReduceMotion = useReducedMotion();
@@ -39,6 +49,7 @@ export function CasualBarView() {
       animate="show"
       className="min-h-screen px-[var(--space-page-x)] py-[var(--space-page-y)]"
       initial="hidden"
+      style={casualBarTheme}
       variants={pageVariants}
     >
       <section className="mx-auto max-w-5xl">

@@ -1,9 +1,12 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { useRouter } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { BarFollowupFlow } from "@/components/bar/BarFollowupFlow";
 import { BarList } from "@/components/bar/BarList";
 import { choreo, duration, ease } from "@/components/motion/tokens";
+import { mockBars } from "@/lib/mockBars";
 
 const casualBarTheme: CSSProperties = {
   ["--shiori-cream" as string]: "#f7f3ea",
@@ -15,7 +18,24 @@ const casualBarTheme: CSSProperties = {
 };
 
 export function CasualBarView() {
+  const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+  const [showFollowup, setShowFollowup] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const bars = mockBars.slice(0, 3);
+
+  const handleViewedAll = useCallback(() => {
+    setShowFollowup(true);
+  }, []);
+
+  const handleReviewCandidates = useCallback(() => {
+    carouselRef.current?.scrollIntoView({ behavior: shouldReduceMotion ? "auto" : "smooth", block: "start" });
+  }, [shouldReduceMotion]);
+
+  const handleRestartConversation = useCallback(() => {
+    router.push("/");
+  }, [router]);
+
   const pageVariants = {
     hidden: shouldReduceMotion
       ? { opacity: 0 }
@@ -78,7 +98,18 @@ export function CasualBarView() {
             恵比寿で静かに過ごせる場所を3件に絞っています。
           </motion.p>
         </motion.div>
-        <BarList />
+        <div ref={carouselRef}>
+          <BarList onViewedAll={handleViewedAll} />
+        </div>
+        <AnimatePresence>
+          {showFollowup ? (
+            <BarFollowupFlow
+              bars={bars}
+              onRestartConversation={handleRestartConversation}
+              onReviewCandidates={handleReviewCandidates}
+            />
+          ) : null}
+        </AnimatePresence>
       </section>
     </motion.main>
   );

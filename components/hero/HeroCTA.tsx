@@ -10,11 +10,11 @@ type HeroCTAProps = {
 };
 
 const stateClasses: Record<PromptInteractionState, string> = {
-  idle: "bg-coffee text-paper hover:bg-bark",
-  intent: "bg-bark text-paper hover:bg-bark",
-  focused: "bg-coffee text-paper hover:bg-bark",
-  typing: "bg-navy text-paper hover:bg-navy/90",
-  submitted: "bg-coffee/45 text-paper",
+  idle: "bg-coffee text-cream hover:bg-ink",
+  intent: "bg-coffee text-cream hover:bg-ink",
+  focused: "bg-coffee text-cream hover:bg-ink",
+  typing: "bg-seal text-cream hover:bg-seal-deep",
+  submitted: "bg-coffee/40 text-cream",
 };
 
 export function HeroCTA({ state, onClick }: HeroCTAProps) {
@@ -23,7 +23,7 @@ export function HeroCTA({ state, onClick }: HeroCTAProps) {
 
   return (
     <motion.button
-      className={`mt-8 inline-flex h-12 items-center justify-center gap-2 rounded-md px-6 text-sm font-medium shadow-soft transition-colors focus:outline-none focus:ring-2 focus:ring-coffee/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-default ${stateClasses[state]}`}
+      className={`mt-9 inline-flex h-12 items-center justify-center gap-2.5 rounded-control px-7 text-sm font-medium tracking-[0.08em] shadow-plate transition-colors focus:outline-none focus:ring-2 focus:ring-seal/35 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-default ${stateClasses[state]}`}
       disabled={isSubmitted}
       onClick={onClick}
       type="button"

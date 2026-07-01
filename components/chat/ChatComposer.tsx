@@ -36,7 +36,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
 
   return (
     <form
-      className="mx-auto flex w-full max-w-3xl items-end gap-3 rounded-2xl border border-coffee/15 bg-white/80 p-3 shadow-soft backdrop-blur focus-within:ring-2 focus-within:ring-coffee/20"
+      className="mx-auto flex w-full max-w-3xl items-end gap-3 rounded-card border border-line bg-cream/90 p-3 shadow-plate backdrop-blur focus-within:border-coffee/40 focus-within:ring-1 focus-within:ring-seal/25"
       onSubmit={handleSubmit}
     >
       <textarea
@@ -51,7 +51,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
       />
       <button
         aria-label="送信"
-        className="flex h-10 w-10 items-center justify-center rounded-md bg-coffee text-paper transition-colors disabled:cursor-default disabled:bg-coffee/35"
+        className="flex h-10 w-10 items-center justify-center rounded-control bg-coffee text-cream transition-colors hover:bg-ink disabled:cursor-default disabled:bg-coffee/30"
         disabled={!canSubmit}
         type="submit"
       >

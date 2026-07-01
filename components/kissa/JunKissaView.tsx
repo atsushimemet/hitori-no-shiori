@@ -9,12 +9,12 @@ import { choreo, duration, ease } from "@/components/motion/tokens";
 import { mockKissas } from "@/lib/mockKissas";
 
 const junKissaTheme: CSSProperties = {
-  ["--shiori-cream" as string]: "#f7f3ea",
-  ["--shiori-paper" as string]: "#fbfaf6",
-  ["--shiori-ink" as string]: "#2b2926",
-  ["--shiori-ink-soft" as string]: "#7d624b",
-  ["--shiori-accent" as string]: "#5b4330",
-  ["--shiori-line" as string]: "#dfd6c8",
+  ["--shiori-cream" as string]: "#fbf6ed",
+  ["--shiori-paper" as string]: "#f5efe4",
+  ["--shiori-ink" as string]: "#4a3729",
+  ["--shiori-ink-soft" as string]: "#8a725c",
+  ["--shiori-accent" as string]: "#b24a37",
+  ["--shiori-line" as string]: "#d6cab7",
 };
 
 export function JunKissaView() {
@@ -87,16 +87,22 @@ export function JunKissaView() {
             },
           }}
         >
-          <p className="text-sm font-medium text-bark/70">今日のひとり時間の栞</p>
+          <motion.div className="flex items-center gap-3" variants={headingVariants}>
+            <span className="ribbon h-4" />
+            <span className="eyebrow text-seal">今日の栞 — 純喫茶</span>
+          </motion.div>
           <motion.h1
-            className="mt-3 font-serif text-4xl font-semibold tracking-normal text-ink sm:text-5xl"
+            className="mt-4 font-serif text-4xl font-medium leading-[1.14] tracking-[0.02em] text-coffee sm:text-5xl"
             variants={headingVariants}
           >
-            今日のひとり時間に合いそうな喫茶店を選びました。
+            今日のひとり時間に、
+            <br className="hidden sm:block" />
+            合いそうな喫茶店を三軒。
           </motion.h1>
-          <motion.p className="mt-5 text-base leading-8 text-ink/70" variants={headingVariants}>
-            銀座で静かに過ごせる場所を3件に絞っています。
+          <motion.p className="mt-5 max-w-md text-base leading-8 text-bark" variants={headingVariants}>
+            銀座で、静かに過ごせる場所を選びました。
           </motion.p>
+          <motion.div className="hairline mt-8" variants={headingVariants} />
         </motion.div>
         <div ref={carouselRef}>
           <KissaList onViewedAll={handleViewedAll} />

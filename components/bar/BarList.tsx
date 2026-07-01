@@ -75,7 +75,7 @@ export function BarList({ onViewedAll }: BarListProps) {
             transition={transition}
             variants={variants}
           >
-            <BarCard bar={bar} className="h-full" reveal={!shouldReduceMotion} />
+            <BarCard bar={bar} className="h-full" index={api.index} reveal={!shouldReduceMotion} total={bars.length} />
           </motion.div>
         </AnimatePresence>
       </div>

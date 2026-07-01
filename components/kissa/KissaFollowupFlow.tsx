@@ -28,10 +28,11 @@ function FollowupQuestion({ children }: { children: ReactNode }) {
   return (
     <motion.div
       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-      className="rounded-lg border border-coffee/10 bg-white/72 p-4 shadow-[0_18px_55px_rgb(61_47_37_/_0.08)] backdrop-blur sm:p-5"
+      className="relative overflow-hidden rounded-card border border-line bg-cream/85 p-5 pl-6 shadow-plate backdrop-blur sm:p-6 sm:pl-7"
       initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 12, filter: "blur(4px)" }}
       transition={{ duration: shouldReduceMotion ? 0.18 : 0.42, ease: [0.22, 1, 0.36, 1] }}
     >
+      <span aria-hidden="true" className="ribbon absolute bottom-4 left-0 top-4 h-auto rounded-r-sm" />
       {children}
     </motion.div>
   );
@@ -41,10 +42,10 @@ function FollowupChip({ children, disabled, isSelected, onClick }: FollowupChipP
   return (
     <motion.button
       className={cn(
-        "inline-flex min-h-10 items-center justify-center rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-coffee/25 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-55",
+        "inline-flex min-h-10 items-center justify-center rounded-control border px-4 py-2 text-sm font-medium tracking-[0.02em] transition focus:outline-none focus:ring-1 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-55",
         isSelected
-          ? "border-coffee bg-coffee text-paper shadow-soft"
-          : "border-coffee/14 bg-paper/70 text-ink/76 hover:border-coffee/28 hover:text-ink",
+          ? "border-coffee bg-coffee text-cream shadow-plate"
+          : "border-line bg-paper text-ink/76 hover:border-bark/40 hover:text-ink",
       )}
       disabled={disabled}
       onClick={onClick}
@@ -96,8 +97,8 @@ export function KissaFollowupFlow({
     >
       <div className="space-y-4">
         <FollowupQuestion>
-          <p className="text-sm font-medium text-bark/72">予定の栞</p>
-          <h2 className="mt-2 font-serif text-2xl font-semibold text-ink">
+          <p className="eyebrow">予定の栞</p>
+          <h2 className="mt-2 font-serif text-2xl font-medium text-coffee">
             行ってみたい喫茶店はありましたか？
           </h2>
           <div className="mt-5 flex flex-wrap gap-3">
@@ -116,7 +117,7 @@ export function KissaFollowupFlow({
         <AnimatePresence mode="popLayout">
           {step !== "ask_interest" && step !== "undecided" ? (
             <FollowupQuestion key="select-kissa">
-              <p className="text-sm font-medium text-bark/72">どの喫茶店に行ってみたいですか？</p>
+              <p className="eyebrow">どの喫茶店に行ってみたいですか？</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {kissas.map((kissa) => (
                   <FollowupChip
@@ -133,7 +134,7 @@ export function KissaFollowupFlow({
 
           {selectedKissaName && step !== "select_kissa" ? (
             <FollowupQuestion key="ask-time">
-              <p className="text-sm font-medium text-bark/72">何時に行きますか？</p>
+              <p className="eyebrow">何時に行きますか？</p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {timeOptions.map((timeOption) => (
                   <FollowupChip
@@ -150,14 +151,14 @@ export function KissaFollowupFlow({
                   行く時間を自由入力
                 </label>
                 <input
-                  className="min-h-11 flex-1 rounded-md border border-coffee/14 bg-paper/72 px-4 text-sm text-ink outline-none transition placeholder:text-ink/36 focus:border-coffee/36 focus:ring-2 focus:ring-coffee/15"
+                  className="min-h-11 flex-1 rounded-control border border-line bg-paper px-4 text-sm text-ink outline-none transition placeholder:text-ink/36 focus:border-coffee/45 focus:ring-2 focus:ring-seal/25"
                   id="kissa-followup-time"
                   onChange={(event) => setCustomTime(event.target.value)}
                   placeholder="例：今日の16時"
                   value={customTime}
                 />
                 <button
-                  className="min-h-11 rounded-md bg-coffee px-5 text-sm font-medium text-paper transition hover:bg-bark focus:outline-none focus:ring-2 focus:ring-coffee/25 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-50"
+                  className="min-h-11 rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={!canConfirmTime}
                   type="submit"
                 >
@@ -169,7 +170,7 @@ export function KissaFollowupFlow({
 
           {(step === "confirm_calendar" || step === "calendar_loading") && selectedKissa ? (
             <FollowupQuestion key="confirm-calendar">
-              <p className="text-sm font-medium text-bark/72">
+              <p className="eyebrow">
                 Google Calendarに予定を登録しますか？
               </p>
               <div className="mt-4 grid gap-2 text-sm leading-7 text-ink/74">
@@ -184,7 +185,7 @@ export function KissaFollowupFlow({
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-md bg-coffee px-5 text-sm font-medium text-paper transition hover:bg-bark focus:outline-none focus:ring-2 focus:ring-coffee/25 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center justify-center rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                   onClick={addToCalendar}
                   type="button"
@@ -192,7 +193,7 @@ export function KissaFollowupFlow({
                   {isLoading ? "栞をはさんでいます" : "Google Calendarに登録する"}
                 </button>
                 <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-coffee/14 px-5 text-sm font-medium text-ink/70 transition hover:border-coffee/28 hover:text-ink focus:outline-none focus:ring-2 focus:ring-coffee/20 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center justify-center rounded-control border border-line px-5 text-sm font-medium text-ink/70 transition hover:border-bark/40 hover:text-ink focus:outline-none focus:ring-2 focus:ring-seal/25 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
                   disabled={isLoading}
                   onClick={deferCalendar}
                   type="button"
@@ -209,7 +210,7 @@ export function KissaFollowupFlow({
                 <div className="relative mt-1 flex h-12 w-8 justify-center text-coffee">
                   <motion.span
                     aria-hidden="true"
-                    className="absolute top-0 h-10 w-1.5 rounded-b-full bg-coffee/72"
+                    className="absolute top-0 h-10 w-1.5 rounded-b-full bg-seal/80"
                     initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: -18 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: shouldReduceMotion ? 0.18 : 0.46, ease: [0.22, 1, 0.36, 1] }}
@@ -217,7 +218,7 @@ export function KissaFollowupFlow({
                   <Bookmark className="mt-7 h-4 w-4" strokeWidth={1.6} />
                 </div>
                 <div>
-                  <p className="font-serif text-2xl font-semibold text-ink">
+                  <p className="font-serif text-2xl font-medium text-coffee">
                     予定の栞をはさみました。
                   </p>
                   <p className="mt-2 text-sm leading-7 text-ink/66">
@@ -230,7 +231,7 @@ export function KissaFollowupFlow({
 
           {step === "undecided" ? (
             <FollowupQuestion key="undecided">
-              <p className="font-serif text-2xl font-semibold text-ink">
+              <p className="font-serif text-2xl font-medium text-coffee">
                 もう少し考えてみましょう。
               </p>
               <p className="mt-2 text-sm leading-7 text-ink/66">
@@ -238,14 +239,14 @@ export function KissaFollowupFlow({
               </p>
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-md bg-coffee px-5 text-sm font-medium text-paper transition hover:bg-bark focus:outline-none focus:ring-2 focus:ring-coffee/25 focus:ring-offset-2 focus:ring-offset-paper"
+                  className="inline-flex min-h-11 items-center justify-center rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper"
                   onClick={onReviewCandidates}
                   type="button"
                 >
                   候補を見返す
                 </button>
                 <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-md border border-coffee/14 px-5 text-sm font-medium text-ink/70 transition hover:border-coffee/28 hover:text-ink focus:outline-none focus:ring-2 focus:ring-coffee/20 focus:ring-offset-2 focus:ring-offset-paper"
+                  className="inline-flex min-h-11 items-center justify-center rounded-control border border-line px-5 text-sm font-medium text-ink/70 transition hover:border-bark/40 hover:text-ink focus:outline-none focus:ring-2 focus:ring-seal/25 focus:ring-offset-2 focus:ring-offset-paper"
                   onClick={onRestartConversation}
                   type="button"
                 >

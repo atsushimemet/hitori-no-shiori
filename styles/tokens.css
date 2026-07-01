@@ -1,16 +1,40 @@
 :root {
-  --color-paper: 247 243 234;
-  --color-white: 255 255 255;
-  --color-ink: 43 41 38;
-  --color-coffee: 91 67 48;
-  --color-bark: 125 98 75;
-  --color-mist: 224 230 229;
-  --color-navy: 67 82 105;
+  /* --- Paper & ink ------------------------------------------------------- */
+  /* 温かいアイボリーの誌面。白は使わず、生成りの階調で余白をつくる。 */
+  --color-paper: 245 239 228; /* base spread */
+  --color-cream: 251 246 237; /* raised card / note */
+  --color-white: 252 250 245; /* highest surface */
+  --color-ink: 38 34 30; /* espresso black — 本文 */
+  --color-coffee: 74 55 41; /* 濃い珈琲 — 見出し・主役 */
+  --color-bark: 138 114 92; /* 焙煎の中間色 — 補助テキスト */
+  --color-mist: 224 216 201; /* 温かいグレー — 面の陰影 */
+  --color-line: 214 202 183; /* ヘアライン・罫線 */
+  --color-navy: 52 66 88; /* 深い藍 — 静かな寒色の対比 */
 
-  --font-sans: "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP";
-  --font-serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP";
+  /* --- Editorial accent -------------------------------------------------- */
+  /* 朱：誌面に一点だけ差す印。リンク・強調・栞リボン。 */
+  --color-seal: 178 74 55;
+  --color-seal-deep: 150 58 43;
 
-  --space-page-x: clamp(1.25rem, 4vw, 4rem);
+  /* --- Type ------------------------------------------------------------- */
+  --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP",
+    "Times New Roman", serif;
+  --font-sans: "Hiragino Sans", "Yu Gothic", "YuGothic", "Noto Sans JP", system-ui,
+    sans-serif;
+  --font-mono: "SFMono-Regular", "SF Mono", "Menlo", "Consolas", monospace;
+
+  /* --- Rhythm ----------------------------------------------------------- */
+  --space-page-x: clamp(1.25rem, 5vw, 5.5rem);
   --space-page-y: clamp(3rem, 8vw, 7rem);
-  --radius-control: 0.5rem;
+
+  /* 誌面らしい鋭い角。カード・入力・ボタンは面取り程度に留める。 */
+  --radius-control: 3px;
+  --radius-card: 4px;
+
+  /* 紙に落ちる柔らかな影 */
+  --shadow-plate: 0 1px 0 rgb(255 255 255 / 0.5), 0 22px 60px -28px rgb(60 44 32 / 0.35);
+  --shadow-lift: 0 1px 0 rgb(255 255 255 / 0.5), 0 34px 80px -30px rgb(60 44 32 / 0.42);
+
+  /* 追い込み（レター/トラッキング） */
+  --tracking-label: 0.28em;
 }

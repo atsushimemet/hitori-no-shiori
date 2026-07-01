@@ -23,12 +23,17 @@ export function ChatMessage({ children, layoutId, role }: ChatMessageProps) {
     >
       <motion.div
         className={cn(
-          "max-w-[82%] rounded-2xl px-5 py-4 text-left text-sm leading-7 shadow-soft sm:max-w-[68%] sm:text-base",
-          isUser ? "rounded-tr-md bg-white text-ink" : "rounded-tl-md bg-paper/60 text-ink/72",
+          "relative max-w-[82%] rounded-card px-5 py-4 text-left text-sm leading-7 sm:max-w-[68%] sm:text-base",
+          isUser
+            ? "border border-line bg-cream text-ink shadow-plate"
+            : "border border-line/60 bg-paper/50 pl-6 text-ink/80",
         )}
         layout
         layoutId={layoutId}
       >
+        {!isUser ? (
+          <span aria-hidden="true" className="ribbon absolute left-0 top-3 bottom-3 h-auto rounded-r-sm" />
+        ) : null}
         {children}
       </motion.div>
     </motion.div>

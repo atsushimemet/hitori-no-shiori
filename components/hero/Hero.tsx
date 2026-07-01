@@ -51,12 +51,27 @@ export function Hero() {
       ) : (
         <motion.main
           animate={{ opacity: viewState === "transitioning" ? 0 : 1, y: viewState === "transitioning" ? -16 : 0 }}
-          className="flex min-h-screen items-center justify-center px-[var(--space-page-x)] py-[var(--space-page-y)]"
+          className="relative flex min-h-screen flex-col px-[var(--space-page-x)] py-8 sm:py-10"
           exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -12 }}
           key="hero"
           transition={{ duration: shouldReduceMotion ? 0.18 : 0.38, ease: [0.4, 0, 0.2, 1] }}
         >
-          <section className="mx-auto flex w-full max-w-3xl flex-col items-center text-center">
+          {/* 見当（トンボ）マーク — 誌面の四隅 */}
+          <CornerTicks />
+
+          {/* マストヘッド */}
+          <motion.header
+            animate={isIntroComplete ? { opacity: 1 } : { opacity: 0 }}
+            className="mx-auto flex w-full max-w-4xl items-center justify-between"
+            initial={{ opacity: 0 }}
+            transition={{ delay: contentDelay + 0.1, duration: 0.6 }}
+          >
+            <span className="eyebrow">ひとりの栞</span>
+            <span className="eyebrow hidden sm:inline">A Guide to Your Solitude</span>
+            <span className="figure text-[0.6875rem] text-bark">No. 01</span>
+          </motion.header>
+
+          <section className="mx-auto flex w-full max-w-2xl flex-1 flex-col items-center justify-center text-center">
             <AnimatePresence>
               {!isIntroComplete ? (
                 <BookmarkIntro key="bookmark-intro" onComplete={() => setIsIntroComplete(true)} />
@@ -69,12 +84,20 @@ export function Hero() {
               initial={{ opacity: 0, y: 8 }}
               transition={{ delay: contentDelay, duration: 0.48, ease: [0.4, 0, 0.2, 1] }}
             >
-              <h1 className="mt-2 font-serif text-4xl font-semibold tracking-normal text-ink sm:text-6xl">
+              <span className="eyebrow text-seal">今日の一枚</span>
+
+              <h1 className="relative mt-5 font-serif text-5xl font-medium leading-[1.08] tracking-[0.04em] text-coffee sm:text-7xl">
                 ひとりの栞
               </h1>
-              <p className="mt-5 text-base leading-8 text-ink/75 sm:text-lg">
-                今の気分からひとり時間を提案します
-              </p>
+
+              <div className="mt-6 flex items-center gap-3 text-bark">
+                <span className="hairline w-8" />
+                <p className="text-sm leading-7 tracking-[0.08em] sm:text-base">
+                  今の気分から、ひとり時間を一枚。
+                </p>
+                <span className="hairline w-8" />
+              </div>
+
               <div className="mt-10 w-full max-w-xl">
                 <PromptBox
                   layoutId={shouldReduceMotion ? undefined : "prompt-message"}
@@ -106,8 +129,36 @@ export function Hero() {
               />
             </motion.div>
           </section>
+
+          {/* フッターの奥付 */}
+          <motion.footer
+            animate={isIntroComplete ? { opacity: 1 } : { opacity: 0 }}
+            className="mx-auto flex w-full max-w-4xl items-center justify-between text-bark"
+            initial={{ opacity: 0 }}
+            transition={{ delay: contentDelay + 0.14, duration: 0.6 }}
+          >
+            <span className="eyebrow">店探しではなく、時間の案内</span>
+            <span className="eyebrow hidden sm:inline">静けさ・余白・直感</span>
+          </motion.footer>
         </motion.main>
       )}
     </AnimatePresence>
+  );
+}
+
+function CornerTicks() {
+  const positions = [
+    "left-4 top-4 border-l border-t",
+    "right-4 top-4 border-r border-t",
+    "bottom-4 left-4 border-b border-l",
+    "bottom-4 right-4 border-b border-r",
+  ] as const;
+
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+      {positions.map((position) => (
+        <span className={`absolute h-4 w-4 border-line/80 ${position}`} key={position} />
+      ))}
+    </div>
   );
 }

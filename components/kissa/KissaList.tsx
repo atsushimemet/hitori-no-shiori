@@ -75,7 +75,7 @@ export function KissaList({ onViewedAll }: KissaListProps) {
             transition={transition}
             variants={variants}
           >
-            <KissaCard className="h-full" kissa={kissa} reveal={!shouldReduceMotion} />
+            <KissaCard className="h-full" index={api.index} kissa={kissa} reveal={!shouldReduceMotion} total={kissas.length} />
           </motion.div>
         </AnimatePresence>
       </div>

@@ -11,16 +11,43 @@
 html {
   min-height: 100%;
   background: rgb(var(--color-paper));
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
+  position: relative;
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at 50% 0%, rgb(var(--color-mist) / 0.65), transparent 34rem),
-    rgb(var(--color-paper));
   color: rgb(var(--color-ink));
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-sans);
+  font-feature-settings: "palt" 1;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background:
+    /* 上部のやわらかな採光 */
+    radial-gradient(120% 60% at 50% -8%, rgb(var(--color-white) / 0.7), transparent 60%),
+    /* 誌面の温かみ */
+    linear-gradient(180deg, rgb(var(--color-paper)) 0%, rgb(var(--color-mist) / 0.35) 100%),
+    rgb(var(--color-paper));
+}
+
+/* 紙の粒子（グレイン）。誌面の質感を薄く敷く。 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+}
+
+/* 実コンテンツはグレインの上に。 */
+body > * {
+  position: relative;
+  z-index: 1;
 }
 
 button,
@@ -30,5 +57,45 @@ textarea {
 }
 
 ::selection {
-  background: rgb(var(--color-coffee) / 0.18);
+  background: rgb(var(--color-seal) / 0.16);
+  color: rgb(var(--color-ink));
+}
+
+@layer components {
+  /* エディトリアルの見出しラベル：欧文を追い込んで小さく。 */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: rgb(var(--color-bark));
+  }
+
+  /* 罫線（ヘアライン） */
+  .hairline {
+    height: 1px;
+    background: rgb(var(--color-line));
+  }
+
+  /* 栞リボン：朱の縦アクセント。セクションやカードの標。 */
+  .ribbon {
+    width: 2px;
+    background: rgb(var(--color-seal));
+    border-radius: 0 0 2px 2px;
+  }
+
+  /* 図版・カードの面。誌面に置かれた一葉のように。 */
+  .plate {
+    background: rgb(var(--color-cream));
+    border: 1px solid rgb(var(--color-line));
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-plate);
+  }
+
+  /* 旧式数字（インデックス番号）用 */
+  .figure {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+  }
 }

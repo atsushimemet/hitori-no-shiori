@@ -15,7 +15,7 @@ export function TypewriterText({ text, promptIndex, isDeleting }: TypewriterText
   return (
     <div className="flex min-h-[6.5rem] flex-col justify-between gap-5">
       <div>
-        <p className="mb-3 text-xs font-medium text-bark/70">今日の気分を、そのまま話すなら</p>
+        <p className="eyebrow mb-3">今日の気分を、そのまま</p>
         <AnimatePresence mode="wait">
           <motion.p
             animate={{ opacity: 1, y: 0 }}
@@ -28,7 +28,7 @@ export function TypewriterText({ text, promptIndex, isDeleting }: TypewriterText
             <motion.span
               animate={shouldReduceMotion ? { opacity: 0.35 } : { opacity: [0.2, 1, 0.2] }}
               aria-hidden="true"
-              className="ml-1 inline-block h-5 w-px translate-y-1 bg-coffee/70"
+              className="ml-1 inline-block h-5 w-px translate-y-1 bg-seal/80"
               transition={{
                 duration: 1.05,
                 ease: "easeInOut",
@@ -38,9 +38,9 @@ export function TypewriterText({ text, promptIndex, isDeleting }: TypewriterText
           </motion.p>
         </AnimatePresence>
       </div>
-      <div className="flex items-center justify-between gap-4 text-xs text-ink/45">
-        <span>{isDeleting ? "次の気分へ" : "入力例を表示中"}</span>
-        <span>
+      <div className="flex items-center justify-between gap-4">
+        <span className="eyebrow">{isDeleting ? "次の気分へ" : "入力例"}</span>
+        <span className="figure text-xs text-bark">
           {String(promptIndex + 1).padStart(2, "0")} / {String(promptExamples.length).padStart(2, "0")}
         </span>
       </div>

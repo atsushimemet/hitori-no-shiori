@@ -19,7 +19,7 @@ export function AssistantLoading() {
         {[0, 1, 2].map((dot) => (
           <motion.span
             animate={shouldReduceMotion ? { opacity: 0.55 } : { opacity: [0.3, 0.9, 0.3], scale: [1, 1.18, 1] }}
-            className="h-1.5 w-1.5 rounded-full bg-coffee/55"
+            className="h-1.5 w-1.5 rounded-full bg-seal/60"
             key={dot}
             transition={{
               delay: dot * 0.18,

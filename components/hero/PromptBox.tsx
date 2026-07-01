@@ -19,11 +19,11 @@ type PromptBoxProps = {
 };
 
 const stateStyles: Record<PromptInteractionState, string> = {
-  idle: "border-coffee/15 bg-white/80",
-  intent: "border-coffee/24 bg-white/90",
-  focused: "border-coffee/35 bg-white/95",
-  typing: "border-coffee/40 bg-white/95",
-  submitted: "border-coffee/20 bg-white/90",
+  idle: "border-line bg-cream/85",
+  intent: "border-bark/40 bg-cream/95",
+  focused: "border-coffee/45 bg-white",
+  typing: "border-coffee/55 bg-white",
+  submitted: "border-line bg-cream/85",
 };
 
 export function PromptBox({
@@ -50,7 +50,7 @@ export function PromptBox({
         scale: !shouldReduceMotion && (state === "focused" || state === "typing") ? 1.005 : 1,
         y: !shouldReduceMotion && state === "submitted" ? -4 : state === "intent" ? -2 : 0,
       }}
-      className={`group rounded-2xl border p-3 text-left shadow-soft backdrop-blur transition-colors focus-within:ring-2 focus-within:ring-coffee/20 ${stateStyles[state]}`}
+      className={`group relative rounded-card border p-3 text-left shadow-plate backdrop-blur transition-colors focus-within:ring-1 focus-within:ring-seal/30 ${stateStyles[state]}`}
       initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 10 }}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
@@ -58,8 +58,9 @@ export function PromptBox({
       transition={{ delay: shouldReduceMotion ? 0 : 0.12, duration: 0.46, ease: [0.4, 0, 0.2, 1] }}
       whileHover={shouldReduceMotion || isSubmitted ? undefined : { y: -2 }}
     >
+      <span aria-hidden="true" className="ribbon absolute -top-1 left-6 h-4" />
       <motion.div
-        className="relative min-h-44 w-full cursor-text rounded-xl border border-transparent bg-paper/45 px-5 py-5 transition-colors group-focus-within:bg-white/75 sm:min-h-48 sm:px-7 sm:py-6"
+        className="relative min-h-44 w-full cursor-text rounded-control border border-line/60 bg-paper/40 px-5 py-5 transition-colors group-focus-within:border-transparent group-focus-within:bg-white/70 sm:min-h-48 sm:px-7 sm:py-6"
         layoutId={layoutId}
         onClick={() => textareaRef.current?.focus()}
       >

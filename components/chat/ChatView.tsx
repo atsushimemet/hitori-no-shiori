@@ -6,7 +6,12 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import { mockAssistantBarListMessage, mockAssistantQuestion } from "@/lib/mockChat";
+import {
+  mockAssistantBarListMessage,
+  mockAssistantKissaListMessage,
+  mockAssistantKissaQuestion,
+  mockAssistantQuestion,
+} from "@/lib/mockChat";
 
 type ChatViewProps = {
   userMessage: string;
@@ -24,6 +29,10 @@ const ROUTE_TRANSITION_DELAY = 1200;
 export function ChatView({ userMessage }: ChatViewProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
+  const isKissaConversation = userMessage.includes("喫茶店") || userMessage.includes("カフェ");
+  const assistantQuestion = isKissaConversation ? mockAssistantKissaQuestion : mockAssistantQuestion;
+  const assistantListMessage = isKissaConversation ? mockAssistantKissaListMessage : mockAssistantBarListMessage;
+  const nextRoute = isKissaConversation ? "/jun-kissa" : "/casual-bar";
   const conversationRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [composerValue, setComposerValue] = useState("");
@@ -47,7 +56,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
         setMessages((current) => [
           ...current,
           {
-            content: mockAssistantQuestion,
+            content: assistantQuestion,
             id: "assistant-question",
             role: "assistant",
           },
@@ -59,7 +68,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
     );
 
     return () => window.clearTimeout(timeout);
-  }, [shouldReduceMotion]);
+  }, [assistantQuestion, shouldReduceMotion]);
 
   function handleComposerSubmit() {
     const nextMessage = composerValue.trim();
@@ -84,7 +93,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
         setMessages((current) => [
           ...current,
           {
-            content: mockAssistantBarListMessage,
+            content: assistantListMessage,
             id: "assistant-bar-list-message",
             role: "assistant",
           },
@@ -94,7 +103,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
 
         window.setTimeout(
           () => {
-            router.push("/casual-bar");
+            router.push(nextRoute);
           },
           shouldReduceMotion ? 250 : ROUTE_TRANSITION_DELAY,
         );

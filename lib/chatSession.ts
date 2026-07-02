@@ -1,3 +1,5 @@
+import { placeCategories, resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
+
 export type ChatSessionMessage = {
   content: string;
   id: string;
@@ -11,7 +13,7 @@ export type ChatSessionPhase =
   | "recommendations-ready"
   | "candidate-navigation-pending";
 
-export type RecommendationRoute = "/casual-bar" | "/jun-kissa";
+export type RecommendationRoute = (typeof placeCategories)[keyof typeof placeCategories]["route"];
 
 export type ChatSession = {
   composerValue: string;
@@ -34,7 +36,7 @@ const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
   "candidate-navigation-pending",
 ];
 
-const RECOMMENDATION_ROUTES: RecommendationRoute[] = ["/casual-bar", "/jun-kissa"];
+const RECOMMENDATION_ROUTES = Object.values(placeCategories).map((category) => category.route);
 
 export function createInitialChatSession(initialUserMessage: string): ChatSession {
   const message = initialUserMessage.trim();
@@ -58,7 +60,7 @@ export function createInitialChatSession(initialUserMessage: string): ChatSessio
 }
 
 export function getRecommendationRoute(message: string): RecommendationRoute {
-  return message.includes("喫茶店") || message.includes("カフェ") ? "/jun-kissa" : "/casual-bar";
+  return resolvePlaceCategoryForMessage(message).route;
 }
 
 export function readChatSession(): ChatSession | null {

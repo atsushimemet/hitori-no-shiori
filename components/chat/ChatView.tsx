@@ -12,13 +12,8 @@ import {
   writeChatSession,
   type ChatSession,
 } from "@/lib/chatSession";
-import {
-  mockAssistantBarListMessage,
-  mockAssistantKissaListMessage,
-  mockAssistantKissaQuestion,
-  mockAssistantQuestion,
-  mockInitialUserMessage,
-} from "@/lib/mockChat";
+import { mockInitialUserMessage } from "@/lib/mockChat";
+import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
 
 const ASSISTANT_REPLY_DELAY = 1500;
 const ROUTE_TRANSITION_DELAY = 1200;
@@ -35,10 +30,10 @@ export function ChatView() {
   const isAssistantLoading = session?.isAssistantLoading ?? false;
   const isNavigating = session?.isNavigating ?? false;
   const isComposerDisabled = isAssistantLoading || isNavigating || phase !== "awaiting-user-location";
-  const isKissaConversation = session?.recommendationRoute === "/jun-kissa";
-  const assistantQuestion = isKissaConversation ? mockAssistantKissaQuestion : mockAssistantQuestion;
-  const assistantListMessage = isKissaConversation ? mockAssistantKissaListMessage : mockAssistantBarListMessage;
-  const nextRoute = session?.recommendationRoute ?? "/casual-bar";
+  const category = resolvePlaceCategoryForMessage(session?.initialUserMessage ?? mockInitialUserMessage);
+  const assistantQuestion = category.assistantQuestion;
+  const assistantListMessage = category.assistantListMessage;
+  const nextRoute = session?.recommendationRoute ?? category.route;
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -114,7 +109,8 @@ export function ChatView() {
             return current;
           }
 
-          const hasAssistantListMessage = current.messages.some((message) => message.id === "assistant-list-message");
+          const assistantListMessageId = `assistant-${category.id}-list-message`;
+          const hasAssistantListMessage = current.messages.some((message) => message.id === assistantListMessageId);
 
           return {
             ...current,
@@ -126,7 +122,7 @@ export function ChatView() {
                   ...current.messages,
                   {
                     content: assistantListMessage,
-                    id: "assistant-list-message",
+                    id: assistantListMessageId,
                     role: "assistant",
                   },
                 ],
@@ -138,7 +134,7 @@ export function ChatView() {
     );
 
     return () => window.clearTimeout(timeout);
-  }, [assistantListMessage, isAssistantLoading, phase, shouldReduceMotion]);
+  }, [assistantListMessage, category.id, isAssistantLoading, phase, shouldReduceMotion]);
 
   useEffect(() => {
     if (phase !== "candidate-navigation-pending" || !isNavigating) {

@@ -92,8 +92,8 @@ export const placeCategories = {
     ],
     route: "/bookstore",
     selectPrompt: "どの本屋に行ってみたいですか？",
-    timeOptions: ["今日 15:00", "今日 18:00", "明日 11:00"],
-    timePlaceholder: "例：明日の11時",
+    timeOptions: ["今日 15:00", "今日 18:00"],
+    timePlaceholder: "例：今日の15時",
   },
   casualBar: {
     assistantListMessage: "恵比寿ですね、以下のバーをリストアップしました。",
@@ -142,7 +142,7 @@ export const placeCategories = {
     ],
     route: "/casual-bar",
     selectPrompt: "どのお店に行ってみたいですか？",
-    timeOptions: ["今日 19:00", "今日 20:00", "明日 19:00"],
+    timeOptions: ["今日 19:00", "今日 20:00"],
     timePlaceholder: "例：今日の20時",
   },
   casualBistro: {
@@ -192,7 +192,7 @@ export const placeCategories = {
     ],
     route: "/casual-bistro",
     selectPrompt: "どのビストロに行ってみたいですか？",
-    timeOptions: ["今日 18:30", "今日 20:00", "明日 19:00"],
+    timeOptions: ["今日 18:30", "今日 20:00"],
     timePlaceholder: "例：今日の19時半",
   },
   hashiyaPasta: {
@@ -242,8 +242,8 @@ export const placeCategories = {
     ],
     route: "/hashiya-pasta",
     selectPrompt: "どのパスタ店に行ってみたいですか？",
-    timeOptions: ["今日 13:00", "今日 18:30", "明日 12:30"],
-    timePlaceholder: "例：明日の13時",
+    timeOptions: ["今日 13:00", "今日 18:30"],
+    timePlaceholder: "例：今日の13時",
   },
   junKissa: {
     assistantListMessage: "銀座で静かに過ごせる喫茶店をリストアップしました。",
@@ -292,7 +292,7 @@ export const placeCategories = {
     ],
     route: "/jun-kissa",
     selectPrompt: "どの喫茶店に行ってみたいですか？",
-    timeOptions: ["今日 14:00", "今日 16:00", "明日 15:00"],
+    timeOptions: ["今日 14:00", "今日 16:00"],
     timePlaceholder: "例：今日の16時",
   },
   machiChuka: {
@@ -342,7 +342,7 @@ export const placeCategories = {
     ],
     route: "/machi-chuka",
     selectPrompt: "どの町中華に行ってみたいですか？",
-    timeOptions: ["今日 12:30", "今日 19:00", "明日 12:00"],
+    timeOptions: ["今日 12:30", "今日 19:00"],
     timePlaceholder: "例：今日の19時",
   },
   oufuCurry: {
@@ -392,7 +392,7 @@ export const placeCategories = {
     ],
     route: "/oufu-curry",
     selectPrompt: "どのカレー店に行ってみたいですか？",
-    timeOptions: ["今日 13:00", "今日 18:30", "明日 12:30"],
+    timeOptions: ["今日 13:00", "今日 18:30"],
     timePlaceholder: "例：今日の18時半",
   },
   vintageClothes: {
@@ -442,8 +442,8 @@ export const placeCategories = {
     ],
     route: "/vintage-clothes",
     selectPrompt: "どの古着屋に行ってみたいですか？",
-    timeOptions: ["今日 16:00", "明日 13:00", "明日 16:00"],
-    timePlaceholder: "例：明日の16時",
+    timeOptions: ["今日 13:00", "今日 16:00"],
+    timePlaceholder: "例：今日の16時",
   },
   workFriendlyCafe: {
     assistantListMessage: "代々木上原で、作業がはかどる場所をリストアップしました。",
@@ -492,8 +492,8 @@ export const placeCategories = {
     ],
     route: "/work-friendly-cafe",
     selectPrompt: "どの場所に行ってみたいですか？",
-    timeOptions: ["今日 10:00", "今日 13:00", "明日 10:00"],
-    timePlaceholder: "例：明日の10時",
+    timeOptions: ["今日 10:00", "今日 13:00"],
+    timePlaceholder: "例：今日の10時",
   },
 } satisfies Record<PlaceCategoryId, PlaceCategoryConfig>;
 

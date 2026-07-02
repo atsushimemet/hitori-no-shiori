@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { KissaFollowupFlow } from "@/components/kissa/KissaFollowupFlow";
 import { KissaList } from "@/components/kissa/KissaList";
 import { choreo, duration, ease } from "@/components/motion/tokens";
+import { clearChatSession } from "@/lib/chatSession";
 import { mockKissas } from "@/lib/mockKissas";
 
 const junKissaTheme: CSSProperties = {
@@ -33,6 +34,7 @@ export function JunKissaView() {
   }, [shouldReduceMotion]);
 
   const handleRestartConversation = useCallback(() => {
+    clearChatSession();
     router.push("/");
   }, [router]);
 

@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { BarFollowupFlow } from "@/components/bar/BarFollowupFlow";
 import { BarList } from "@/components/bar/BarList";
 import { choreo, duration, ease } from "@/components/motion/tokens";
+import { clearChatSession } from "@/lib/chatSession";
 import { mockBars } from "@/lib/mockBars";
 
 const casualBarTheme: CSSProperties = {
@@ -33,6 +34,7 @@ export function CasualBarView() {
   }, [shouldReduceMotion]);
 
   const handleRestartConversation = useCallback(() => {
+    clearChatSession();
     router.push("/");
   }, [router]);
 

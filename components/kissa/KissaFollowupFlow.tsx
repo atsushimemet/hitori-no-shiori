@@ -20,7 +20,7 @@ type FollowupChipProps = {
   onClick: () => void;
 };
 
-const timeOptions = ["今日 14:00", "今日 16:00", "明日 15:00"] as const;
+const timeOptions = ["今日 14:00", "今日 16:00"] as const;
 
 function FollowupQuestion({ children }: { children: ReactNode }) {
   const shouldReduceMotion = useReducedMotion();

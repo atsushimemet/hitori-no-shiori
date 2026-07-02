@@ -72,7 +72,7 @@ export function Hero() {
             <div className="mt-6 flex items-center gap-3 text-bark">
               <span className="hairline w-8" />
               <p className="text-sm leading-7 tracking-[0.08em] sm:text-base">
-                今の気分から、ひとり時間を一枚。
+                今日行くお店を決めましょう。
               </p>
               <span className="hairline w-8" />
             </div>

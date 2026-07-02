@@ -127,7 +127,6 @@ export function ChatView({ userMessage }: ChatViewProps) {
       >
         <header className="flex items-center justify-between border-b border-line pb-4">
           <span className="eyebrow text-seal">対話</span>
-          <span className="eyebrow hidden sm:inline">Finding Your Solitude</span>
           <span className="figure text-[0.6875rem] text-bark">No. 01</span>
         </header>
         <div className="flex flex-1 flex-col justify-end gap-7 pb-8 pt-10 sm:gap-8 sm:pt-14">

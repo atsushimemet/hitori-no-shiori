@@ -67,7 +67,6 @@ export function Hero() {
             transition={{ delay: contentDelay + 0.1, duration: 0.6 }}
           >
             <span className="eyebrow">ひとりの栞</span>
-            <span className="eyebrow hidden sm:inline">A Guide to Your Solitude</span>
             <span className="figure text-[0.6875rem] text-bark">No. 01</span>
           </motion.header>
 

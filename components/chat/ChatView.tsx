@@ -6,12 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessage } from "@/components/chat/ChatMessage";
-import {
-  mockAssistantBarListMessage,
-  mockAssistantKissaListMessage,
-  mockAssistantKissaQuestion,
-  mockAssistantQuestion,
-} from "@/lib/mockChat";
+import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
 
 type ChatViewProps = {
   userMessage: string;
@@ -29,10 +24,10 @@ const ROUTE_TRANSITION_DELAY = 1200;
 export function ChatView({ userMessage }: ChatViewProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
-  const isKissaConversation = userMessage.includes("喫茶店") || userMessage.includes("カフェ");
-  const assistantQuestion = isKissaConversation ? mockAssistantKissaQuestion : mockAssistantQuestion;
-  const assistantListMessage = isKissaConversation ? mockAssistantKissaListMessage : mockAssistantBarListMessage;
-  const nextRoute = isKissaConversation ? "/jun-kissa" : "/casual-bar";
+  const category = resolvePlaceCategoryForMessage(userMessage);
+  const assistantQuestion = category.assistantQuestion;
+  const assistantListMessage = category.assistantListMessage;
+  const nextRoute = category.route;
   const conversationRef = useRef<HTMLDivElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
   const [composerValue, setComposerValue] = useState("");
@@ -94,7 +89,7 @@ export function ChatView({ userMessage }: ChatViewProps) {
           ...current,
           {
             content: assistantListMessage,
-            id: "assistant-bar-list-message",
+            id: `assistant-${category.id}-list-message`,
             role: "assistant",
           },
         ]);

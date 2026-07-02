@@ -1,6 +1,6 @@
 export type CreateCalendarEventParams = {
-  barName: string;
   datetimeText: string;
+  placeName: string;
 };
 
 export async function createCalendarEvent(params: CreateCalendarEventParams) {

@@ -4,9 +4,10 @@ import { ArrowUpRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { duration, ease } from "@/components/motion/tokens";
 import { cn } from "@/lib/cn";
-import type { Place } from "@/lib/placeCategories";
+import type { Place, PlaceAttributeDefinition } from "@/lib/placeCategories";
 
 type PlaceCardProps = {
+  attributeSchema?: PlaceAttributeDefinition[];
   className?: string;
   index?: number;
   place: Place;
@@ -14,8 +15,32 @@ type PlaceCardProps = {
   total?: number;
 };
 
-export function PlaceCard({ className, index, place, reveal = true, total }: PlaceCardProps) {
+function getSeatInfo(place: Place) {
+  if (place.seatInfo) {
+    return place.seatInfo;
+  }
+
+  if (typeof place.totalSeats === "number") {
+    const details = [
+      typeof place.counterSeats === "number" ? `カウンター${place.counterSeats}` : null,
+      typeof place.tableSeats === "number" ? `テーブル${place.tableSeats}` : null,
+    ].filter(Boolean);
+
+    return `全${place.totalSeats}席${details.length > 0 ? `（${details.join("・")}）` : ""}`;
+  }
+
+  return "席情報は確認中";
+}
+
+export function PlaceCard({ attributeSchema = [], className, index, place, reveal = true, total }: PlaceCardProps) {
   const shouldReduceMotion = useReducedMotion();
+  const googleMapUrl = place.googleMapUrl ?? place.mapUrl ?? "#";
+  const attributes = attributeSchema
+    .map((definition) => ({
+      ...definition,
+      value: place.attributes?.[definition.key],
+    }))
+    .filter((attribute) => attribute.value);
   const cardVariants = {
     hidden: shouldReduceMotion
       ? { opacity: 0 }
@@ -40,18 +65,6 @@ export function PlaceCard({ className, index, place, reveal = true, total }: Pla
       scaleX: 1,
       transition: {
         delay: shouldReduceMotion ? 0 : duration.micro,
-        duration: duration.micro,
-        ease: ease.gentle,
-      },
-    },
-  };
-  const tagVariants = {
-    hidden: shouldReduceMotion ? { opacity: 0 } : { opacity: 0, y: 4 },
-    show: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        delay: shouldReduceMotion ? 0 : duration.micro * 2,
         duration: duration.micro,
         ease: ease.gentle,
       },
@@ -87,38 +100,55 @@ export function PlaceCard({ className, index, place, reveal = true, total }: Pla
             {place.station}｜徒歩{place.walkMinutes}分
           </p>
         </div>
-        <motion.span
-          className="shrink-0 rounded-control border border-line bg-paper px-3 py-1 text-xs tracking-[0.08em] text-coffee"
-          variants={tagVariants}
-        >
-          {place.atmosphere}
-        </motion.span>
       </div>
 
       <motion.div className="mt-6 h-px origin-left bg-line" variants={lineVariants} />
 
       <dl className="mt-6 grid gap-5 sm:grid-cols-2">
         <div>
-          <dt className="eyebrow">席・空間</dt>
+          <dt className="eyebrow">席情報</dt>
           <dd className="mt-2 text-sm leading-7 text-ink/80">
-            全{place.totalSeats}席
-            <span className="text-bark">
-              （カウンター{place.counterSeats}・テーブル{place.tableSeats}）
-            </span>
+            {getSeatInfo(place)}
           </dd>
         </div>
         <div>
           <dt className="eyebrow">読みもの・SNS</dt>
           <dd className="mt-2 text-sm leading-7 text-ink/80">
-            {place.recommendedArticle}
-            <span className="mt-0.5 block text-bark">Instagram</span>
+            {place.recommendedArticleUrl ? (
+              <a
+                className="text-bark transition-colors hover:text-seal"
+                href={place.recommendedArticleUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {place.recommendedArticle}
+              </a>
+            ) : (
+              place.recommendedArticle
+            )}
+            {place.instagramUrl ? (
+              <a
+                className="mt-0.5 block text-bark transition-colors hover:text-seal"
+                href={place.instagramUrl}
+                rel="noreferrer"
+                target="_blank"
+              >
+                Instagram
+              </a>
+            ) : null}
           </dd>
         </div>
+        {attributes.map((attribute) => (
+          <div key={attribute.key}>
+            <dt className="eyebrow">{attribute.label}</dt>
+            <dd className="mt-2 text-sm leading-7 text-ink/80">{attribute.value}</dd>
+          </div>
+        ))}
       </dl>
 
       <motion.a
         className="group mt-7 inline-flex items-center gap-1.5 text-sm font-medium tracking-[0.04em] text-seal transition-colors hover:text-seal-deep"
-        href={place.mapUrl}
+        href={googleMapUrl}
         rel="noreferrer"
         target="_blank"
         whileHover="hover"

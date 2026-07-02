@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { choreo, duration, ease } from "@/components/motion/tokens";
 import { PlaceFollowupFlow } from "@/components/place/PlaceFollowupFlow";
 import { PlaceList } from "@/components/place/PlaceList";
+import { clearChatSession } from "@/lib/chatSession";
 import type { PlaceCategoryConfig } from "@/lib/placeCategories";
 
 const placeTheme: CSSProperties = {
@@ -37,6 +38,7 @@ export function PlaceListView({ category }: PlaceListViewProps) {
   }, [shouldReduceMotion]);
 
   const handleRestartConversation = useCallback(() => {
+    clearChatSession();
     router.push("/");
   }, [router]);
 

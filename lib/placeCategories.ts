@@ -1,14 +1,22 @@
-export type PlaceAtmosphere = "静か" | "ほどよい賑わい" | "賑やか";
+export type PlaceAttributeDefinition = {
+  key: string;
+  label: string;
+};
 
 export type Place = {
-  atmosphere: PlaceAtmosphere;
-  counterSeats: number;
-  mapUrl: string;
+  attributes?: Record<string, string>;
+  counterSeats?: number;
+  googleMapUrl?: string;
+  id?: string;
+  instagramUrl?: string;
+  mapUrl?: string;
   name: string;
   recommendedArticle: string;
+  recommendedArticleUrl?: string;
+  seatInfo?: string;
   station: string;
-  tableSeats: number;
-  totalSeats: number;
+  tableSeats?: number;
+  totalSeats?: number;
   walkMinutes: number;
 };
 
@@ -26,6 +34,7 @@ export type PlaceCategoryId =
 export type PlaceCategoryConfig = {
   assistantListMessage: string;
   assistantQuestion: string;
+  attributeSchema?: PlaceAttributeDefinition[];
   calendarPlaceLabel: string;
   description: string;
   heading: string;
@@ -36,6 +45,7 @@ export type PlaceCategoryConfig = {
   places: Place[];
   route: string;
   selectPrompt: string;
+  slug: string;
   timeOptions: readonly string[];
   timePlaceholder: string;
 };
@@ -57,7 +67,6 @@ export const placeCategories = {
     label: "本屋",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 0,
         mapUrl: mapSearch("Book Room Shiori Jimbocho"),
         name: "Book Room 栞",
@@ -68,7 +77,6 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 0,
         mapUrl: mapSearch("Bookshelf Mado Ochanomizu"),
         name: "Bookshelf 窓",
@@ -79,7 +87,6 @@ export const placeCategories = {
         walkMinutes: 6,
       },
       {
-        atmosphere: "静か",
         counterSeats: 0,
         mapUrl: mapSearch("Kotoba no Mori Jimbocho"),
         name: "ことばの森",
@@ -92,12 +99,14 @@ export const placeCategories = {
     ],
     route: "/bookstore",
     selectPrompt: "どの本屋に行ってみたいですか？",
+    slug: "bookstore",
     timeOptions: ["今日 15:00", "今日 18:00", "明日 11:00"],
     timePlaceholder: "例：明日の11時",
   },
   casualBar: {
     assistantListMessage: "恵比寿ですね、以下のバーをリストアップしました。",
     assistantQuestion: "近所のバーですね、場所はどちらを希望されますか？",
+    attributeSchema: [{ key: "price_range", label: "価格帯" }],
     calendarPlaceLabel: "お店",
     description: "恵比寿で、静かに過ごせる場所を選びました。",
     heading: "今日のひとり時間に、\n合いそうなバーを三軒。",
@@ -107,7 +116,7 @@ export const placeCategories = {
     label: "カジュアルバー",
     places: [
       {
-        atmosphere: "静か",
+        attributes: { price_range: "確認中" },
         counterSeats: 8,
         mapUrl: mapSearch("Bar Amber Note Ebisu"),
         name: "Bar Amber Note",
@@ -118,7 +127,7 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "ほどよい賑わい",
+        attributes: { price_range: "確認中" },
         counterSeats: 10,
         mapUrl: mapSearch("Evening Stand Ebisu"),
         name: "Evening Stand Ebisu",
@@ -129,7 +138,7 @@ export const placeCategories = {
         walkMinutes: 5,
       },
       {
-        atmosphere: "静か",
+        attributes: { price_range: "確認中" },
         counterSeats: 6,
         mapUrl: mapSearch("Book & Glass Ebisu"),
         name: "Book & Glass Ebisu",
@@ -142,6 +151,7 @@ export const placeCategories = {
     ],
     route: "/casual-bar",
     selectPrompt: "どのお店に行ってみたいですか？",
+    slug: "casual-bar",
     timeOptions: ["今日 19:00", "今日 20:00", "明日 19:00"],
     timePlaceholder: "例：今日の20時",
   },
@@ -157,7 +167,6 @@ export const placeCategories = {
     label: "カジュアルビストロ",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 6,
         mapUrl: mapSearch("Bistro Note Yoyogi Uehara"),
         name: "Bistro Note",
@@ -168,7 +177,6 @@ export const placeCategories = {
         walkMinutes: 4,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 8,
         mapUrl: mapSearch("Table Souffle Yoyogi Uehara"),
         name: "Table Souffle",
@@ -179,7 +187,6 @@ export const placeCategories = {
         walkMinutes: 5,
       },
       {
-        atmosphere: "静か",
         counterSeats: 5,
         mapUrl: mapSearch("Bistro Kashiwa Tomigaya"),
         name: "Bistro 柏",
@@ -192,6 +199,7 @@ export const placeCategories = {
     ],
     route: "/casual-bistro",
     selectPrompt: "どのビストロに行ってみたいですか？",
+    slug: "casual-bistro",
     timeOptions: ["今日 18:30", "今日 20:00", "明日 19:00"],
     timePlaceholder: "例：今日の19時半",
   },
@@ -207,7 +215,6 @@ export const placeCategories = {
     label: "ハシヤ系パスタ",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 7,
         mapUrl: mapSearch("Pasta Hashi Note Yoyogi Hachiman"),
         name: "Pasta Hashi Note",
@@ -218,7 +225,6 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 10,
         mapUrl: mapSearch("Spaghetti Kissa Mugi Yoyogi Koen"),
         name: "スパゲッティ喫茶 麦",
@@ -229,7 +235,6 @@ export const placeCategories = {
         walkMinutes: 5,
       },
       {
-        atmosphere: "静か",
         counterSeats: 6,
         mapUrl: mapSearch("Hashiya Style Pasta Tomigaya"),
         name: "橋の皿",
@@ -242,12 +247,14 @@ export const placeCategories = {
     ],
     route: "/hashiya-pasta",
     selectPrompt: "どのパスタ店に行ってみたいですか？",
+    slug: "hashiya-pasta",
     timeOptions: ["今日 13:00", "今日 18:30", "明日 12:30"],
     timePlaceholder: "例：明日の13時",
   },
   junKissa: {
     assistantListMessage: "銀座で静かに過ごせる喫茶店をリストアップしました。",
     assistantQuestion: "静かな喫茶店ですね。場所はどちらを希望されますか？",
+    attributeSchema: [{ key: "smoking_policy", label: "喫煙可否" }],
     calendarPlaceLabel: "喫茶店",
     description: "銀座で、静かに過ごせる場所を選びました。",
     heading: "今日のひとり時間に、\n合いそうな喫茶店を三軒。",
@@ -257,7 +264,7 @@ export const placeCategories = {
     label: "純喫茶",
     places: [
       {
-        atmosphere: "静か",
+        attributes: { smoking_policy: "確認中" },
         counterSeats: 4,
         mapUrl: mapSearch("喫茶 月灯 銀座"),
         name: "喫茶 月灯",
@@ -268,7 +275,7 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "ほどよい賑わい",
+        attributes: { smoking_policy: "確認中" },
         counterSeats: 6,
         mapUrl: mapSearch("銀座 珈琲室 燈"),
         name: "銀座 珈琲室 燈",
@@ -279,7 +286,7 @@ export const placeCategories = {
         walkMinutes: 4,
       },
       {
-        atmosphere: "静か",
+        attributes: { smoking_policy: "確認中" },
         counterSeats: 6,
         mapUrl: mapSearch("喫茶 栞 東銀座"),
         name: "喫茶 栞",
@@ -292,6 +299,7 @@ export const placeCategories = {
     ],
     route: "/jun-kissa",
     selectPrompt: "どの喫茶店に行ってみたいですか？",
+    slug: "jun-kissa",
     timeOptions: ["今日 14:00", "今日 16:00", "明日 15:00"],
     timePlaceholder: "例：今日の16時",
   },
@@ -307,7 +315,6 @@ export const placeCategories = {
     label: "町中華",
     places: [
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 10,
         mapUrl: mapSearch("中華 月星 神保町"),
         name: "中華 月星",
@@ -318,7 +325,6 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "静か",
         counterSeats: 8,
         mapUrl: mapSearch("飯店 すずらん 水道橋"),
         name: "飯店 すずらん",
@@ -329,7 +335,6 @@ export const placeCategories = {
         walkMinutes: 6,
       },
       {
-        atmosphere: "賑やか",
         counterSeats: 12,
         mapUrl: mapSearch("餃子と炒飯 燈火 九段下"),
         name: "餃子と炒飯 燈火",
@@ -342,6 +347,7 @@ export const placeCategories = {
     ],
     route: "/machi-chuka",
     selectPrompt: "どの町中華に行ってみたいですか？",
+    slug: "machi-chuka",
     timeOptions: ["今日 12:30", "今日 19:00", "明日 12:00"],
     timePlaceholder: "例：今日の19時",
   },
@@ -357,7 +363,6 @@ export const placeCategories = {
     label: "欧風カレー",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 8,
         mapUrl: mapSearch("カレー舎 銀匙 神保町"),
         name: "カレー舎 銀匙",
@@ -368,7 +373,6 @@ export const placeCategories = {
         walkMinutes: 4,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 6,
         mapUrl: mapSearch("欧風カレー 花時計 御茶ノ水"),
         name: "欧風カレー 花時計",
@@ -379,7 +383,6 @@ export const placeCategories = {
         walkMinutes: 6,
       },
       {
-        atmosphere: "静か",
         counterSeats: 10,
         mapUrl: mapSearch("カレールーム 栞 小川町"),
         name: "カレールーム 栞",
@@ -392,6 +395,7 @@ export const placeCategories = {
     ],
     route: "/oufu-curry",
     selectPrompt: "どのカレー店に行ってみたいですか？",
+    slug: "oufu-curry",
     timeOptions: ["今日 13:00", "今日 18:30", "明日 12:30"],
     timePlaceholder: "例：今日の18時半",
   },
@@ -407,7 +411,6 @@ export const placeCategories = {
     label: "古着",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 0,
         mapUrl: mapSearch("Vintage Letter Koenji"),
         name: "Vintage Letter",
@@ -418,7 +421,6 @@ export const placeCategories = {
         walkMinutes: 4,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 0,
         mapUrl: mapSearch("Closet Mugi Koenji"),
         name: "Closet 麦",
@@ -429,7 +431,6 @@ export const placeCategories = {
         walkMinutes: 6,
       },
       {
-        atmosphere: "静か",
         counterSeats: 0,
         mapUrl: mapSearch("Archive Room Asagaya"),
         name: "Archive Room",
@@ -442,6 +443,7 @@ export const placeCategories = {
     ],
     route: "/vintage-clothes",
     selectPrompt: "どの古着屋に行ってみたいですか？",
+    slug: "vintage-clothes",
     timeOptions: ["今日 16:00", "明日 13:00", "明日 16:00"],
     timePlaceholder: "例：明日の16時",
   },
@@ -457,7 +459,6 @@ export const placeCategories = {
     label: "作業向きカフェ",
     places: [
       {
-        atmosphere: "静か",
         counterSeats: 12,
         mapUrl: mapSearch("Desk Cafe Shiori Yoyogi Uehara"),
         name: "Desk Cafe 栞",
@@ -468,7 +469,6 @@ export const placeCategories = {
         walkMinutes: 3,
       },
       {
-        atmosphere: "ほどよい賑わい",
         counterSeats: 10,
         mapUrl: mapSearch("Morning Table Tomigaya"),
         name: "Morning Table",
@@ -479,7 +479,6 @@ export const placeCategories = {
         walkMinutes: 6,
       },
       {
-        atmosphere: "静か",
         counterSeats: 8,
         mapUrl: mapSearch("Focus Room Hatagaya"),
         name: "Focus Room",
@@ -492,6 +491,7 @@ export const placeCategories = {
     ],
     route: "/work-friendly-cafe",
     selectPrompt: "どの場所に行ってみたいですか？",
+    slug: "work-friendly-cafe",
     timeOptions: ["今日 10:00", "今日 13:00", "明日 10:00"],
     timePlaceholder: "例：明日の10時",
   },

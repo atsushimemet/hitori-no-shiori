@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion, type Variants } from "motion
 import { CarouselShell } from "@/components/carousel/CarouselShell";
 import { PlaceCard } from "@/components/place/PlaceCard";
 import { useCarousel } from "@/hooks/useCarousel";
-import type { Place } from "@/lib/placeCategories";
+import type { Place, PlaceAttributeDefinition } from "@/lib/placeCategories";
 
 const turnVariants: Variants = {
   enter: (direction: number) => ({ rotateY: direction > 0 ? -90 : 90, opacity: 0.15 }),
@@ -24,11 +24,12 @@ const fadeVariants: Variants = {
 const fadeTransition = { duration: 0.3, ease: "easeInOut" as const };
 
 type PlaceListProps = {
+  attributeSchema?: PlaceAttributeDefinition[];
   onViewedAll?: () => void;
   places: Place[];
 };
 
-export function PlaceList({ onViewedAll, places }: PlaceListProps) {
+export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceListProps) {
   const shouldReduceMotion = useReducedMotion();
   const displayPlaces = places.slice(0, 3);
   const api = useCarousel({ count: displayPlaces.length, autoPlayMs: 5500 });
@@ -41,7 +42,7 @@ export function PlaceList({ onViewedAll, places }: PlaceListProps) {
 
   useEffect(() => {
     viewedIndexesRef.current.add(api.index);
-    if (viewedIndexesRef.current.size >= displayPlaces.length) {
+    if (displayPlaces.length > 0 && viewedIndexesRef.current.size >= displayPlaces.length) {
       setHasViewedAll(true);
     }
   }, [api.index, displayPlaces.length]);
@@ -53,7 +54,14 @@ export function PlaceList({ onViewedAll, places }: PlaceListProps) {
   }, [hasViewedAll, onViewedAll]);
 
   if (!place) {
-    return null;
+    return (
+      <div className="max-w-3xl rounded-card border border-line bg-cream p-8 text-left shadow-plate">
+        <p className="font-serif text-2xl font-medium text-coffee">まだ表示できる店舗がありません。</p>
+        <p className="mt-3 text-sm leading-7 text-ink/66">
+          Supabaseで公開済みの店舗を登録すると、ここに候補が表示されます。
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -81,6 +89,7 @@ export function PlaceList({ onViewedAll, places }: PlaceListProps) {
             variants={variants}
           >
             <PlaceCard
+              attributeSchema={attributeSchema}
               className="h-full"
               index={api.index}
               place={place}

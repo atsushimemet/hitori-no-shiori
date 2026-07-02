@@ -1,6 +1,11 @@
 import { PlaceListView } from "@/components/place/PlaceListView";
+import { getRandomPlacesByCategorySlug } from "@/lib/places";
 import { placeCategories } from "@/lib/placeCategories";
 
-export default function BookstorePage() {
-  return <PlaceListView category={placeCategories.bookstore} />;
+export const dynamic = "force-dynamic";
+
+export default async function BookstorePage() {
+  const category = await getRandomPlacesByCategorySlug(placeCategories.bookstore);
+
+  return <PlaceListView category={category} />;
 }

@@ -112,7 +112,7 @@ export function PlaceListView({ category }: PlaceListViewProps) {
           <motion.div className="hairline mt-8" variants={headingVariants} />
         </motion.div>
         <div ref={carouselRef}>
-          <PlaceList onViewedAll={handleViewedAll} places={places} />
+          <PlaceList attributeSchema={category.attributeSchema} onViewedAll={handleViewedAll} places={places} />
         </div>
         <AnimatePresence>
           {showFollowup ? (

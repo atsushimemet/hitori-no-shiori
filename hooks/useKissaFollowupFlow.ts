@@ -46,7 +46,7 @@ export function useKissaFollowupFlow() {
     if (!selectedKissaName || !datetimeText) return;
 
     setStep("calendar_loading");
-    await createCalendarEvent({ barName: selectedKissaName, datetimeText });
+    await createCalendarEvent({ datetimeText, placeName: selectedKissaName });
     setStep("calendar_success");
   }
 

@@ -46,7 +46,7 @@ export function useBarFollowupFlow() {
     if (!selectedBarName || !datetimeText) return;
 
     setStep("calendar_loading");
-    await createCalendarEvent({ barName: selectedBarName, datetimeText });
+    await createCalendarEvent({ datetimeText, placeName: selectedBarName });
     setStep("calendar_success");
   }
 

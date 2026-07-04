@@ -25,6 +25,7 @@ type RandomPlaceRow = {
   id: string;
   instagram_url: string | null;
   name: string;
+  payment_methods: string[] | null;
   recommended_article: string;
   recommended_article_url: string | null;
   seat_info: string;
@@ -44,6 +45,7 @@ function toPlace(row: RandomPlaceRow): Place {
     id: row.id,
     instagramUrl: row.instagram_url ?? "",
     name: row.name,
+    paymentMethods: row.payment_methods ?? [],
     recommendedArticle: row.recommended_article,
     recommendedArticleUrl: row.recommended_article_url ?? "",
     seatInfo: row.seat_info,

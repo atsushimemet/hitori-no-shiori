@@ -4,6 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { duration, ease } from "@/components/motion/tokens";
 import { cn } from "@/lib/cn";
+import { orderPaymentMethods } from "@/lib/paymentMethods";
 import type { Place, PlaceAttributeDefinition } from "@/lib/placeCategories";
 
 type PlaceCardProps = {
@@ -41,6 +42,7 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
       value: place.attributes?.[definition.key],
     }))
     .filter((attribute) => attribute.value);
+  const paymentMethods = orderPaymentMethods(place.paymentMethods ?? []);
   const cardVariants = {
     hidden: shouldReduceMotion
       ? { opacity: 0 }
@@ -144,6 +146,21 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
             <dd className="mt-2 break-words text-sm leading-7 text-ink/80">{attribute.value}</dd>
           </div>
         ))}
+        {paymentMethods.length > 0 ? (
+          <div className="min-w-0 sm:col-span-2">
+            <dt className="eyebrow">決済方法</dt>
+            <dd className="mt-2 flex flex-wrap gap-2">
+              {paymentMethods.map((method) => (
+                <span
+                  className="inline-flex items-center rounded-full border border-line bg-paper/70 px-3 py-1 text-xs leading-5 text-ink/75"
+                  key={method}
+                >
+                  {method}
+                </span>
+              ))}
+            </dd>
+          </div>
+        ) : null}
       </dl>
 
       <motion.a

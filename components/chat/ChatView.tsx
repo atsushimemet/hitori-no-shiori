@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessage } from "@/components/chat/ChatMessage";
+import { PlaceRouteLoading } from "@/components/place/PlaceRouteLoading";
 import {
   createInitialChatSession,
   readChatSession,
@@ -184,54 +185,57 @@ export function ChatView() {
   }
 
   return (
-    <motion.main
-      animate={{ opacity: isNavigating ? 0 : 1, y: isNavigating && !shouldReduceMotion ? -10 : 0 }}
-      className="flex min-h-screen flex-col bg-transparent px-[var(--space-page-x)] py-6 sm:py-8"
-      initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
-      transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.4, 0, 0.2, 1] }}
-    >
-      {session ? (
-        <section
-          aria-label="ひとり時間の対話"
-          className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-between outline-none"
-          ref={conversationRef}
-          tabIndex={-1}
-        >
-          <div className="flex flex-1 flex-col justify-end gap-7 pb-8 pt-10 sm:gap-8 sm:pt-14">
-            <AnimatePresence initial={false}>
-              {session.messages.map((message, index) => (
-                <ChatMessage
-                  key={message.id}
-                  layoutId={
-                    index === 0 && message.role === "user" && !shouldReduceMotion ? "prompt-message" : undefined
-                  }
-                  role={message.role}
-                >
-                  {message.content}
-                </ChatMessage>
-              ))}
-              {isAssistantLoading ? (
-                <motion.div
-                  className="flex justify-start"
-                  exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-                  key="assistant-loading"
-                  transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-                >
-                  <AssistantLoading />
-                </motion.div>
-              ) : null}
-            </AnimatePresence>
-          </div>
-          <ChatComposer
-            disabled={isComposerDisabled}
-            onChange={(value) => {
-              setSession((current) => (current ? { ...current, composerValue: value } : current));
-            }}
-            onSubmit={handleComposerSubmit}
-            value={session.composerValue}
-          />
-        </section>
-      ) : null}
-    </motion.main>
+    <>
+      <motion.main
+        animate={{ opacity: isNavigating ? 0 : 1, y: isNavigating && !shouldReduceMotion ? -10 : 0 }}
+        className="flex min-h-screen flex-col bg-transparent px-[var(--space-page-x)] py-6 sm:py-8"
+        initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 12 }}
+        transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.4, 0, 0.2, 1] }}
+      >
+        {session ? (
+          <section
+            aria-label="ひとり時間の対話"
+            className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-between outline-none"
+            ref={conversationRef}
+            tabIndex={-1}
+          >
+            <div className="flex flex-1 flex-col justify-end gap-7 pb-8 pt-10 sm:gap-8 sm:pt-14">
+              <AnimatePresence initial={false}>
+                {session.messages.map((message, index) => (
+                  <ChatMessage
+                    key={message.id}
+                    layoutId={
+                      index === 0 && message.role === "user" && !shouldReduceMotion ? "prompt-message" : undefined
+                    }
+                    role={message.role}
+                  >
+                    {message.content}
+                  </ChatMessage>
+                ))}
+                {isAssistantLoading ? (
+                  <motion.div
+                    className="flex justify-start"
+                    exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                    key="assistant-loading"
+                    transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
+                  >
+                    <AssistantLoading />
+                  </motion.div>
+                ) : null}
+              </AnimatePresence>
+            </div>
+            <ChatComposer
+              disabled={isComposerDisabled}
+              onChange={(value) => {
+                setSession((current) => (current ? { ...current, composerValue: value } : current));
+              }}
+              onSubmit={handleComposerSubmit}
+              value={session.composerValue}
+            />
+          </section>
+        ) : null}
+      </motion.main>
+      <AnimatePresence>{isNavigating ? <PlaceRouteLoading key="place-route-loading" /> : null}</AnimatePresence>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import type { CarouselApi } from "@/hooks/useCarousel";
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,7 @@ type Props = {
   /** スライド領域の縦横比（Tailwind class） */
   aspectClassName?: string;
   viewportClassName?: string;
+  viewportStyle?: CSSProperties;
 };
 
 /**
@@ -25,6 +27,7 @@ export function CarouselShell({
   className,
   aspectClassName = "aspect-[3/4]",
   viewportClassName,
+  viewportStyle,
 }: Props) {
   return (
     <div
@@ -40,6 +43,7 @@ export function CarouselShell({
             aspectClassName,
             viewportClassName,
           )}
+          style={viewportStyle}
         >
           {children}
         </div>

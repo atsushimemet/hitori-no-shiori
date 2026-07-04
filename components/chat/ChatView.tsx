@@ -180,6 +180,7 @@ export function ChatView() {
           },
         ],
         phase: "awaiting-assistant-list",
+        selectedStationName: nextMessage,
       };
     });
   }

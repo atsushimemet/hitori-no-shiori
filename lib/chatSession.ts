@@ -23,6 +23,7 @@ export type ChatSession = {
   messages: ChatSessionMessage[];
   phase: ChatSessionPhase;
   recommendationRoute: RecommendationRoute;
+  selectedStationName?: string;
   version: 1;
 };
 
@@ -103,6 +104,8 @@ export function readChatSession(): ChatSession | null {
       recommendationRoute: isRecommendationRoute(parsedSession.recommendationRoute)
         ? parsedSession.recommendationRoute
         : getRecommendationRoute(parsedSession.initialUserMessage),
+      selectedStationName:
+        typeof parsedSession.selectedStationName === "string" ? parsedSession.selectedStationName : undefined,
       version: 1,
     });
   } catch {

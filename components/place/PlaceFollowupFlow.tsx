@@ -73,10 +73,12 @@ export function PlaceFollowupFlow({
     customTime,
     datetimeText,
     deferCalendar,
+    recommendationStatus,
+    recommendations,
     selectedPlaceName,
     setCustomTime,
     step,
-  } = usePlaceFollowupFlow();
+  } = usePlaceFollowupFlow(places);
 
   const selectedPlace = places.find((place) => place.name === selectedPlaceName);
   const isLoading = step === "calendar_loading";
@@ -226,6 +228,55 @@ export function PlaceFollowupFlow({
                   </button>
                 </div>
               </div>
+
+              {recommendationStatus === "loading" ? (
+                <p className="mt-7 border-t border-line pt-6 text-sm leading-7 text-ink/55">
+                  同じ路線沿いのお店を探しています…
+                </p>
+              ) : null}
+
+              {recommendationStatus === "ready" && recommendations.length > 0 ? (
+                <div className="mt-7 border-t border-line pt-6">
+                  <div className="flex items-center gap-3">
+                    <span aria-hidden="true" className="ribbon h-4" />
+                    <p className="eyebrow text-seal">同じ路線に、もう一軒</p>
+                  </div>
+                  <p className="mt-2 text-sm leading-7 text-ink/66">
+                    {selectedPlace?.station
+                      ? `${selectedPlace.station}と同じ路線沿いに、こんなお店もあります。`
+                      : "同じ路線沿いに、こんなお店もあります。"}
+                  </p>
+                  <ul className="mt-4 space-y-3">
+                    {recommendations.map((recommendation) => (
+                      <li
+                        className="rounded-card border border-line bg-paper/70 p-4"
+                        key={`${recommendation.name}-${recommendation.station}`}
+                      >
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                          <span className="eyebrow text-seal">{recommendation.categoryLabel}</span>
+                          <span className="text-xs text-ink/55">{recommendation.line}沿線</span>
+                        </div>
+                        <p className="mt-1.5 break-words font-serif text-lg font-medium text-coffee">
+                          {recommendation.name}
+                        </p>
+                        <p className="mt-1 break-words text-sm text-bark">
+                          {recommendation.station}｜徒歩{recommendation.walkMinutes}分
+                        </p>
+                        {recommendation.googleMapUrl ? (
+                          <a
+                            className="mt-2 inline-flex text-sm font-medium tracking-[0.02em] text-seal transition-colors hover:text-seal-deep"
+                            href={recommendation.googleMapUrl}
+                            rel="noreferrer"
+                            target="_blank"
+                          >
+                            Google Map で開く
+                          </a>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </FollowupQuestion>
           ) : null}
 

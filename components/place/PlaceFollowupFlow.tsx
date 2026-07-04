@@ -217,6 +217,13 @@ export function PlaceFollowupFlow({
                   <p className="mt-2 text-sm leading-7 text-ink/66">
                     当日は、少し早めに出発できるようにしておきましょう。
                   </p>
+                  <button
+                    className="mt-5 inline-flex min-h-11 items-center justify-center rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper"
+                    onClick={onRestartConversation}
+                    type="button"
+                  >
+                    他の予定を立てますか？
+                  </button>
                 </div>
               </div>
             </FollowupQuestion>

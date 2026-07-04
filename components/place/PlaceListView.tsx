@@ -1,11 +1,12 @@
 "use client";
 
-import { useCallback, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { choreo, duration, ease } from "@/components/motion/tokens";
 import { PlaceFollowupFlow } from "@/components/place/PlaceFollowupFlow";
 import { PlaceList } from "@/components/place/PlaceList";
+import { readChatSession } from "@/lib/chatSession";
 import type { PlaceCategoryConfig } from "@/lib/placeCategories";
 
 const placeTheme: CSSProperties = {
@@ -21,12 +22,37 @@ type PlaceListViewProps = {
   category: PlaceCategoryConfig;
 };
 
+function subscribeToChatSession(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
+function getSelectedStationNameForRoute(route: string) {
+  const session = readChatSession();
+  const stationName = session?.recommendationRoute === route ? session.selectedStationName?.trim() : "";
+
+  return stationName || null;
+}
+
 export function PlaceListView({ category }: PlaceListViewProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [showFollowup, setShowFollowup] = useState(false);
+  const selectedStationName = useSyncExternalStore(
+    subscribeToChatSession,
+    () => getSelectedStationNameForRoute(category.route),
+    () => null,
+  );
   const carouselRef = useRef<HTMLDivElement>(null);
   const places = category.places.slice(0, 3);
+  const description = selectedStationName
+    ? `${selectedStationName}で、静かに過ごせる場所を選びました。`
+    : category.description;
 
   const handleViewedAll = useCallback(() => {
     setShowFollowup(true);
@@ -107,7 +133,7 @@ export function PlaceListView({ category }: PlaceListViewProps) {
             ))}
           </motion.h1>
           <motion.p className="mt-5 max-w-md text-base leading-8 text-bark" variants={headingVariants}>
-            {category.description}
+            {description}
           </motion.p>
           <motion.div className="hairline mt-8" variants={headingVariants} />
         </motion.div>

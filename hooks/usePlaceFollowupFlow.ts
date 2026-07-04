@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { createCalendarEvent } from "@/lib/calendar";
+import type { Place } from "@/lib/placeCategories";
+import type { RecommendedPlace } from "@/lib/recommendations";
 
 export type PlaceFollowupStep =
   | "ask_interest"
@@ -12,11 +14,15 @@ export type PlaceFollowupStep =
   | "calendar_success"
   | "undecided";
 
-export function usePlaceFollowupFlow() {
+export type RecommendationStatus = "idle" | "loading" | "ready";
+
+export function usePlaceFollowupFlow(places: Place[]) {
   const [step, setStep] = useState<PlaceFollowupStep>("ask_interest");
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
   const [datetimeText, setDatetimeText] = useState("");
   const [customTime, setCustomTime] = useState("");
+  const [recommendations, setRecommendations] = useState<RecommendedPlace[]>([]);
+  const [recommendationStatus, setRecommendationStatus] = useState<RecommendationStatus>("idle");
 
   const canConfirmTime = useMemo(() => customTime.trim().length > 0, [customTime]);
 
@@ -42,12 +48,43 @@ export function usePlaceFollowupFlow() {
     setStep("confirm_calendar");
   }
 
+  async function loadRecommendations(station: string) {
+    const trimmedStation = station.trim();
+    if (!trimmedStation) {
+      setRecommendationStatus("ready");
+      return;
+    }
+
+    setRecommendationStatus("loading");
+
+    try {
+      const response = await fetch(
+        `/api/recommendations?station=${encodeURIComponent(trimmedStation)}`,
+      );
+      const data = (await response.json()) as { recommendations?: RecommendedPlace[] };
+      setRecommendations(Array.isArray(data.recommendations) ? data.recommendations : []);
+    } catch (error) {
+      console.error("路線レコメンドの取得に失敗しました", error);
+      setRecommendations([]);
+    } finally {
+      setRecommendationStatus("ready");
+    }
+  }
+
   async function addToCalendar() {
     if (!selectedPlaceName || !datetimeText) return;
+
+    const selectedPlace = places.find((place) => place.name === selectedPlaceName);
 
     setStep("calendar_loading");
     await createCalendarEvent({ datetimeText, placeName: selectedPlaceName });
     setStep("calendar_success");
+
+    if (selectedPlace?.station) {
+      void loadRecommendations(selectedPlace.station);
+    } else {
+      setRecommendationStatus("ready");
+    }
   }
 
   function deferCalendar() {
@@ -64,6 +101,8 @@ export function usePlaceFollowupFlow() {
     customTime,
     datetimeText,
     deferCalendar,
+    recommendationStatus,
+    recommendations,
     selectedPlaceName,
     setCustomTime,
     step,

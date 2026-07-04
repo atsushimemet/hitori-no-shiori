@@ -41,7 +41,7 @@ export const ChatComposer = forwardRef<HTMLTextAreaElement, ChatComposerProps>(f
     >
       <textarea
         aria-label="追加の希望"
-        className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-sm leading-6 text-ink outline-none disabled:cursor-default"
+        className="min-h-12 flex-1 resize-none bg-transparent px-3 py-2 text-base leading-6 text-ink outline-none disabled:cursor-default sm:text-sm"
         disabled={disabled}
         onChange={(event) => onChange(event.target.value)}
         onKeyDown={handleKeyDown}

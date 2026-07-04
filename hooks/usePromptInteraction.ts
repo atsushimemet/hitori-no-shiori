@@ -9,6 +9,7 @@ type UsePromptInteractionResult = {
   value: string;
   setValue: (value: string) => void;
   isTypewriterPaused: boolean;
+  handleSelectExample: (example: string) => void;
   handleMouseEnter: () => void;
   handleMouseLeave: () => void;
   handleFocus: () => void;
@@ -47,6 +48,15 @@ export function usePromptInteraction(): UsePromptInteractionResult {
     value,
     setValue,
     isTypewriterPaused: state === "focused" || state === "typing" || state === "submitted",
+    handleSelectExample: (example) => {
+      if (state === "submitted") {
+        return;
+      }
+
+      clearBlurTimeout();
+      setValue(example);
+      setState(example.trim().length > 0 ? "typing" : "focused");
+    },
     handleMouseEnter: () => {
       clearBlurTimeout();
       setState((current) => (current === "idle" ? "intent" : current));

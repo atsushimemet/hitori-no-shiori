@@ -98,7 +98,7 @@ export function Hero() {
                   text={typewriter.text}
                 />
               </PromptBox>
-              <PromptExamples />
+              <PromptExamples activeIndex={typewriter.promptIndex} onSelect={promptInteraction.handleSelectExample} />
             </div>
             <HeroCTA
               onClick={() => {

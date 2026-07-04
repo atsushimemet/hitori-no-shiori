@@ -11,6 +11,8 @@ export type Place = {
   googleMapUrl?: string;
   id?: string;
   instagramUrl?: string;
+  // 指定エリアに店舗が足りず、近隣エリアから補完された店舗であることを示す。
+  isSupplemented?: boolean;
   mapUrl?: string;
   name: string;
   paymentMethods?: PaymentMethod[];
@@ -35,6 +37,9 @@ export type PlaceCategoryId =
   | "workFriendlyCafe";
 
 export type PlaceCategoryConfig = {
+  // このカテゴリが本来対象とする指定エリア（広域地区名）。
+  // 指定エリアの店舗が3件未満のとき、近隣エリアから補完する判定に使う。
+  area: string;
   assistantListMessage: string;
   assistantQuestion: string;
   attributeSchema?: PlaceAttributeDefinition[];
@@ -59,6 +64,7 @@ function mapSearch(query: string) {
 
 export const placeCategories = {
   bookstore: {
+    area: "神保町",
     assistantListMessage: "神保町で、目的を決めずに歩ける本屋をリストアップしました。",
     assistantQuestion: "本屋さんですね。どのあたりで歩きたいですか？",
     calendarPlaceLabel: "本屋",
@@ -110,6 +116,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の15時",
   },
   casualBar: {
+    area: "恵比寿",
     assistantListMessage: "恵比寿ですね、以下のバーをリストアップしました。",
     assistantQuestion: "近所のバーですね、場所はどちらを希望されますか？",
     attributeSchema: [{ key: "price_range", label: "価格帯" }],
@@ -146,13 +153,15 @@ export const placeCategories = {
         walkMinutes: 5,
       },
       {
+        // 恵比寿の店舗が2件になるよう、近隣エリア「代官山」に移設。
+        // 指定エリア（恵比寿）が3件未満になり、この店舗が近隣エリアからの補完として表示される。
         attributes: { price_range: "確認中" },
         counterSeats: 6,
-        mapUrl: mapSearch("Book & Glass Ebisu"),
+        mapUrl: mapSearch("Book & Glass Daikanyama"),
         name: "Book & Glass Ebisu",
         paymentMethods: ["現金"],
-        recommendedArticle: "ひとりで過ごしやすい夜の隠れ家",
-        station: "恵比寿駅",
+        recommendedArticle: "代官山で静かに過ごせる夜の隠れ家",
+        station: "代官山駅",
         tableSeats: 6,
         totalSeats: 12,
         walkMinutes: 7,
@@ -165,6 +174,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の20時",
   },
   casualBistro: {
+    area: "代々木上原",
     assistantListMessage: "代々木上原で、ひとりでも入りやすいビストロをリストアップしました。",
     assistantQuestion: "カジュアルなビストロですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -216,6 +226,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の19時半",
   },
   hashiyaPasta: {
+    area: "代々木八幡",
     assistantListMessage: "代々木八幡で、ハシヤ系パスタの気分に合う店をリストアップしました。",
     assistantQuestion: "ハシヤ系パスタですね。行きやすいエリアはありますか？",
     calendarPlaceLabel: "お店",
@@ -267,6 +278,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の13時",
   },
   junKissa: {
+    area: "銀座",
     assistantListMessage: "銀座で静かに過ごせる喫茶店をリストアップしました。",
     assistantQuestion: "静かな喫茶店ですね。場所はどちらを希望されますか？",
     attributeSchema: [{ key: "smoking_policy", label: "喫煙可否" }],
@@ -322,6 +334,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の16時",
   },
   machiChuka: {
+    area: "神保町",
     assistantListMessage: "神保町で、ひとりでも入りやすい町中華をリストアップしました。",
     assistantQuestion: "町中華ですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -373,6 +386,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の19時",
   },
   oufuCurry: {
+    area: "神保町",
     assistantListMessage: "神保町で、ひとり時間に合う欧風カレーをリストアップしました。",
     assistantQuestion: "欧風カレーですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -424,6 +438,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の18時半",
   },
   vintageClothes: {
+    area: "高円寺",
     assistantListMessage: "高円寺で、ひとりでじっくり見られる古着屋をリストアップしました。",
     assistantQuestion: "古着ですね。どのあたりで探したいですか？",
     calendarPlaceLabel: "古着屋",
@@ -475,6 +490,7 @@ export const placeCategories = {
     timePlaceholder: "例：今日の16時",
   },
   workFriendlyCafe: {
+    area: "代々木上原",
     assistantListMessage: "代々木上原で、作業がはかどる場所をリストアップしました。",
     assistantQuestion: "作業がはかどる場所ですね。どのあたりで探しますか？",
     calendarPlaceLabel: "場所",

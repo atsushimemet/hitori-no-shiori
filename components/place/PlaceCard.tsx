@@ -93,10 +93,10 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
               {typeof total === "number" ? ` / ${String(total).padStart(2, "0")}` : null}
             </span>
           ) : null}
-          <h2 className="mt-2 font-serif text-2xl font-medium tracking-[0.02em] text-coffee sm:text-3xl">
+          <h2 className="mt-2 break-words font-serif text-2xl font-medium tracking-[0.02em] text-coffee sm:text-3xl">
             {place.name}
           </h2>
-          <p className="mt-2 text-sm text-bark">
+          <p className="mt-2 break-words text-sm text-bark">
             {place.station}｜徒歩{place.walkMinutes}分
           </p>
         </div>
@@ -105,18 +105,18 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
       <motion.div className="mt-6 h-px origin-left bg-line" variants={lineVariants} />
 
       <dl className="mt-6 grid gap-5 sm:grid-cols-2">
-        <div>
+        <div className="min-w-0">
           <dt className="eyebrow">席情報</dt>
-          <dd className="mt-2 text-sm leading-7 text-ink/80">
+          <dd className="mt-2 break-words text-sm leading-7 text-ink/80">
             {getSeatInfo(place)}
           </dd>
         </div>
-        <div>
+        <div className="min-w-0">
           <dt className="eyebrow">読みもの・SNS</dt>
-          <dd className="mt-2 text-sm leading-7 text-ink/80">
+          <dd className="mt-2 break-words text-sm leading-7 text-ink/80">
             {place.recommendedArticleUrl ? (
               <a
-                className="text-bark transition-colors hover:text-seal"
+                className="break-words text-bark transition-colors hover:text-seal"
                 href={place.recommendedArticleUrl}
                 rel="noreferrer"
                 target="_blank"
@@ -139,9 +139,9 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
           </dd>
         </div>
         {attributes.map((attribute) => (
-          <div key={attribute.key}>
+          <div className="min-w-0" key={attribute.key}>
             <dt className="eyebrow">{attribute.label}</dt>
-            <dd className="mt-2 text-sm leading-7 text-ink/80">{attribute.value}</dd>
+            <dd className="mt-2 break-words text-sm leading-7 text-ink/80">{attribute.value}</dd>
           </div>
         ))}
       </dl>

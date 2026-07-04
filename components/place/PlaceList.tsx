@@ -33,8 +33,10 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
   const shouldReduceMotion = useReducedMotion();
   const displayPlaces = places.slice(0, 3);
   const api = useCarousel({ count: displayPlaces.length, autoPlayMs: 5500 });
+  const activeCardRef = useRef<HTMLDivElement>(null);
   const viewedIndexesRef = useRef(new Set([0]));
   const [hasViewedAll, setHasViewedAll] = useState(displayPlaces.length <= 1);
+  const [activeCardHeight, setActiveCardHeight] = useState<number | null>(null);
   const place = displayPlaces[api.index];
   const variants = shouldReduceMotion ? fadeVariants : turnVariants;
   const transition = shouldReduceMotion ? fadeTransition : turnTransition;
@@ -53,6 +55,25 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
     }
   }, [hasViewedAll, onViewedAll]);
 
+  useEffect(() => {
+    const element = activeCardRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const updateHeight = () => {
+      setActiveCardHeight(element.scrollHeight);
+    };
+
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(updateHeight);
+    resizeObserver.observe(element);
+
+    return () => resizeObserver.disconnect();
+  }, [api.index, place?.name]);
+
   if (!place) {
     return (
       <div className="max-w-3xl rounded-card border border-line bg-cream p-8 text-left shadow-plate">
@@ -68,15 +89,16 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
     <CarouselShell
       api={api}
       count={displayPlaces.length}
-      aspectClassName="min-h-[28rem] sm:min-h-[26rem]"
+      aspectClassName="min-h-[28rem] transition-[height] duration-300 ease-in-out sm:min-h-[26rem]"
       className="items-start"
       viewportClassName="max-w-3xl"
+      viewportStyle={activeCardHeight ? { height: activeCardHeight } : undefined}
     >
       <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
         <AnimatePresence custom={api.direction} initial={false} mode="popLayout">
           <motion.div
             animate="center"
-            className="absolute inset-0"
+            className="absolute inset-x-0 top-0"
             custom={api.direction}
             exit="exit"
             initial="enter"
@@ -88,14 +110,16 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
             transition={transition}
             variants={variants}
           >
-            <PlaceCard
-              attributeSchema={attributeSchema}
-              className="h-full"
-              index={api.index}
-              place={place}
-              reveal={!shouldReduceMotion}
-              total={displayPlaces.length}
-            />
+            <div ref={activeCardRef}>
+              <PlaceCard
+                attributeSchema={attributeSchema}
+                className="min-h-[28rem] sm:min-h-[26rem]"
+                index={api.index}
+                place={place}
+                reveal={!shouldReduceMotion}
+                total={displayPlaces.length}
+              />
+            </div>
           </motion.div>
         </AnimatePresence>
       </div>

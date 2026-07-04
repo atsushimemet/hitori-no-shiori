@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ひとりの栞">
+  <rect width="512" height="512" rx="96" fill="#f5efe4"/>
+  <path d="M156 112c0-28.7 23.3-52 52-52h164v332c0 33.1-26.9 60-60 60H156V112Z" fill="#fbf6ed"/>
+  <path d="M208 60h164v332c0 33.1-26.9 60-60 60H156V112c0-28.7 23.3-52 52-52Z" fill="none" stroke="#d6cab7" stroke-width="18"/>
+  <path d="M226 60h92v234l-46-31-46 31V60Z" fill="#b24a37"/>
+  <path d="M226 60h92v234l-46-31-46 31V60Z" fill="none" stroke="#963a2b" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M194 156h44" stroke="#8a725c" stroke-width="16" stroke-linecap="round"/>
+  <path d="M194 212h84" stroke="#8a725c" stroke-width="16" stroke-linecap="round"/>
+  <path d="M194 268h58" stroke="#8a725c" stroke-width="16" stroke-linecap="round"/>
+</svg>

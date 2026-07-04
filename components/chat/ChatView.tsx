@@ -22,7 +22,6 @@ export function ChatView() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const conversationRef = useRef<HTMLDivElement>(null);
-  const composerRef = useRef<HTMLTextAreaElement>(null);
   const hasFocusedConversationRef = useRef(false);
   const [hasLoadedSession, setHasLoadedSession] = useState(false);
   const [session, setSession] = useState<ChatSession | null>(null);
@@ -89,7 +88,6 @@ export function ChatView() {
             phase: "awaiting-user-location",
           };
         });
-        window.setTimeout(() => composerRef.current?.focus(), 0);
       },
       shouldReduceMotion ? 400 : ASSISTANT_REPLY_DELAY,
     );
@@ -230,7 +228,6 @@ export function ChatView() {
               setSession((current) => (current ? { ...current, composerValue: value } : current));
             }}
             onSubmit={handleComposerSubmit}
-            ref={composerRef}
             value={session.composerValue}
           />
         </section>

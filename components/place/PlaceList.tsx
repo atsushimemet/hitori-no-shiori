@@ -89,9 +89,9 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
     <CarouselShell
       api={api}
       count={displayPlaces.length}
-      aspectClassName="min-h-[28rem] transition-[height] duration-300 ease-in-out sm:min-h-[26rem]"
-      className="items-start"
-      viewportClassName="max-w-3xl"
+      aspectClassName="min-h-0 transition-[height] duration-300 ease-in-out sm:min-h-[26rem]"
+      className="min-w-0 items-start"
+      viewportClassName="max-w-full sm:max-w-3xl"
       viewportStyle={activeCardHeight ? { height: activeCardHeight } : undefined}
     >
       <div className="absolute inset-0" style={{ transformStyle: "preserve-3d" }}>
@@ -113,7 +113,7 @@ export function PlaceList({ attributeSchema = [], onViewedAll, places }: PlaceLi
             <div ref={activeCardRef}>
               <PlaceCard
                 attributeSchema={attributeSchema}
-                className="min-h-[28rem] sm:min-h-[26rem]"
+                className="sm:min-h-[26rem]"
                 index={api.index}
                 place={place}
                 reveal={!shouldReduceMotion}

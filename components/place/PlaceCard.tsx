@@ -77,7 +77,7 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
     <motion.article
       animate="show"
       className={cn(
-        "relative overflow-hidden rounded-card border border-line bg-cream p-6 text-left shadow-plate transition-colors hover:border-bark/40 sm:p-8",
+        "relative max-w-full overflow-hidden rounded-card border border-line bg-cream p-4 text-left shadow-plate transition-colors hover:border-bark/40 sm:p-6 md:p-8",
         className,
       )}
       initial={reveal ? "hidden" : "show"}
@@ -85,17 +85,17 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
       variants={cardVariants}
       whileHover={shouldReduceMotion ? undefined : { y: -4, boxShadow: "var(--shadow-lift)" }}
     >
-      <span aria-hidden="true" className="ribbon absolute left-8 top-0 h-5" />
+      <span aria-hidden="true" className="ribbon absolute left-4 top-0 h-5 sm:left-8" />
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      <div className="flex min-w-0 items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
           {typeof index === "number" ? (
             <span className="figure text-xs text-seal">
               {String(index + 1).padStart(2, "0")}
               {typeof total === "number" ? ` / ${String(total).padStart(2, "0")}` : null}
             </span>
           ) : null}
-          <h2 className="mt-2 break-words font-serif text-2xl font-medium tracking-[0.02em] text-coffee sm:text-3xl">
+          <h2 className="mt-2 break-words font-serif text-xl font-medium tracking-[0.02em] text-coffee sm:text-2xl md:text-3xl">
             {place.name}
           </h2>
           <p className="mt-2 break-words text-sm text-bark">
@@ -106,7 +106,7 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
 
       <motion.div className="mt-6 h-px origin-left bg-line" variants={lineVariants} />
 
-      <dl className="mt-6 grid gap-5 sm:grid-cols-2">
+      <dl className="mt-5 grid gap-4 sm:mt-6 sm:grid-cols-2 sm:gap-5">
         <div className="min-w-0">
           <dt className="eyebrow">席情報</dt>
           <dd className="mt-2 break-words text-sm leading-7 text-ink/80">
@@ -118,7 +118,7 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
           <dd className="mt-2 break-words text-sm leading-7 text-ink/80">
             {place.recommendedArticleUrl ? (
               <a
-                className="break-words text-bark transition-colors hover:text-seal"
+                className="break-all text-bark transition-colors hover:text-seal"
                 href={place.recommendedArticleUrl}
                 rel="noreferrer"
                 target="_blank"

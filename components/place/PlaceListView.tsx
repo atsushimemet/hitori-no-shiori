@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { choreo, duration, ease } from "@/components/motion/tokens";
@@ -49,6 +49,13 @@ export function PlaceListView({ category }: PlaceListViewProps) {
     () => null,
   );
   const carouselRef = useRef<HTMLDivElement>(null);
+
+  // /chat から遷移した際にスクロール位置が引き継がれると、固定ヘッダーと見出しが
+  // 重なってしまうため、マウント時にページ先頭へ戻す。
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const places = category.places.slice(0, 3);
   const description = selectedStationName
     ? `${selectedStationName}で、静かに過ごせる場所を選びました。`

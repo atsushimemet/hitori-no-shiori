@@ -31,15 +31,15 @@ export function CarouselShell({
 }: Props) {
   return (
     <div
-      className={cn("flex w-full flex-col items-center gap-7", className)}
+      className={cn("flex w-full min-w-0 flex-col items-center gap-7", className)}
       onMouseEnter={api.pause}
       onMouseLeave={api.resume}
     >
-      <div className="relative w-full" style={{ perspective: 1600 }}>
+      <div className="relative w-full min-w-0" style={{ perspective: 1600 }}>
         {/* スライド領域: 高さは親で固定 */}
         <div
           className={cn(
-            "relative w-full max-w-[26rem] overflow-visible sm:max-w-[28rem]",
+            "relative w-full min-w-0 max-w-full overflow-x-clip overflow-y-visible sm:max-w-[28rem]",
             aspectClassName,
             viewportClassName,
           )}

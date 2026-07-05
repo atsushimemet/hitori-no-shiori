@@ -106,12 +106,12 @@ export function PlaceListView({ category, requestedStation }: PlaceListViewProps
   return (
     <motion.main
       animate="show"
-      className="min-h-screen px-[var(--space-page-x)] py-[var(--space-page-y)]"
+      className="min-h-screen overflow-x-hidden px-[var(--space-page-x)] py-[var(--space-page-y)]"
       initial="hidden"
       style={placeTheme}
       variants={pageVariants}
     >
-      <section className="mx-auto max-w-5xl">
+      <section className="mx-auto min-w-0 max-w-5xl">
         <motion.div
           animate="show"
           className="mb-10 max-w-2xl"

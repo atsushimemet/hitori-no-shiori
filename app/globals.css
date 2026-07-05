@@ -10,6 +10,7 @@
 
 html {
   min-height: 100%;
+  overflow-x: hidden;
   background: rgb(var(--color-paper));
   -webkit-text-size-adjust: 100%;
 }

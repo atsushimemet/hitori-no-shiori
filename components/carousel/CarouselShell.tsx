@@ -49,7 +49,7 @@ export function CarouselShell({
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="relative z-10 flex items-center gap-1" aria-label="ページを選択">
         {Array.from({ length: count }).map((_, i) => (
           <button
             key={i}
@@ -58,12 +58,18 @@ export function CarouselShell({
             aria-current={i === api.index}
             onClick={() => api.goTo(i)}
             className={cn(
-              "h-1.5 rounded-full transition-all duration-500",
-              i === api.index
-                ? "w-7 bg-[var(--shiori-ink)]"
-                : "w-1.5 bg-[var(--shiori-line)] hover:bg-[var(--shiori-ink-soft)]",
+              "flex min-h-11 min-w-11 items-center justify-center rounded-control transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shiori-ink)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--shiori-paper)]",
+              i !== api.index ? "hover:[&>span]:bg-[var(--shiori-ink-soft)]" : undefined,
             )}
-          />
+          >
+            <span
+              aria-hidden="true"
+              className={cn(
+                "block h-1.5 rounded-full transition-all duration-500",
+                i === api.index ? "w-7 bg-[var(--shiori-ink)]" : "w-1.5 bg-[var(--shiori-line)]",
+              )}
+            />
+          </button>
         ))}
       </div>
     </div>

@@ -55,6 +55,7 @@ function buildSystemPrompt(): string {
     "判定のルール:",
     "- 「何をしたいか」と「駅名」の両方がユーザー発話に明示され、カテゴリを 1 つに絞れるなら status を \"resolved\" にしてください。",
     "- resolved のときは categoryId、activityLabel（例: 本屋、カジュアルバー）、locationName（例: 神保町、渋谷）を入れてください。",
+    "- ユーザーが駅名質問に「新宿」「渋谷」のように駅なしで短く答えた場合も、駅名として locationName に入れてください。",
     "- カテゴリ説明、候補店舗、過去の代表エリアから駅名を推測してはいけません。",
     "- 「何をしたいか」または「駅名」のどちらかが足りないときは、status を \"question\" にし、assistantMessage に日本語の短い聞き返しを 1 文だけ入れてください。",
     "- question のとき、カテゴリが推測できない場合は categoryId を \"unknown\" にしてください。",

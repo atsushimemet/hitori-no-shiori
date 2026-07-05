@@ -77,6 +77,23 @@ function resolveLocationByText(userText: string): string | null {
   return null;
 }
 
+function resolveGroundedLocation(userText: string, llmLocationName?: string) {
+  const locationByText = resolveLocationByText(userText);
+  if (locationByText) {
+    return locationByText;
+  }
+
+  const normalizedLlmLocation = llmLocationName ? normalizeLocationName(llmLocationName) : "";
+  if (!normalizedLlmLocation) {
+    return null;
+  }
+
+  const escapedLocation = normalizedLlmLocation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const locationPattern = new RegExp(`${escapedLocation}(?:駅)?`);
+
+  return locationPattern.test(userText) ? normalizedLlmLocation : null;
+}
+
 function buildUserText(messages: IntentMessage[]) {
   return messages
     .filter((message) => message.role === "user")
@@ -158,7 +175,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const userLocationName = resolveLocationByText(buildUserText(messages));
+  const userLocationName = resolveGroundedLocation(buildUserText(messages), result.locationName);
   if (!userLocationName) {
     return NextResponse.json<IntentResponse>({
       assistantMessage: `${result.activityLabel}なら、どの駅の近くで探しましょうか？`,

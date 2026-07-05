@@ -92,7 +92,6 @@ export function PlaceRouteLoading({ className = "" }: PlaceRouteLoadingProps) {
           </motion.svg>
         </div>
         <p className="mt-3 font-serif text-2xl font-medium leading-tight text-coffee">今日の栞を開いています</p>
-        <p className="mt-3 text-sm leading-7 text-bark">候補のページをそっと用意しています。</p>
       </div>
     </motion.div>
   );

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import Link from "next/link";
+import { SiteHeader } from "@/components/layout/SiteHeader";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -34,15 +34,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <body>
-        <header className="fixed inset-x-0 top-0 z-20 px-[var(--space-page-x)] py-4">
-          <Link
-            aria-label="トップページへ移動"
-            className="inline-flex items-center font-serif text-base font-medium tracking-[0.08em] text-coffee transition-colors hover:text-seal focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-seal"
-            href="/"
-          >
-            ひとりの栞
-          </Link>
-        </header>
+        <SiteHeader />
         {children}
       </body>
     </html>

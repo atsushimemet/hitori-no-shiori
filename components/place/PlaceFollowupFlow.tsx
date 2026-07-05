@@ -73,6 +73,7 @@ export function PlaceFollowupFlow({
     confirmCustomTime,
     customTime,
     datetimeText,
+    datetimeValue,
     deferCalendar,
     recommendationStatus,
     recommendations,
@@ -86,6 +87,7 @@ export function PlaceFollowupFlow({
     ? buildGoogleCalendarUrl({
         details: `${category.label}｜${selectedPlace.station}（徒歩${selectedPlace.walkMinutes}分）｜${datetimeText}`,
         location: selectedPlace.googleMapUrl || selectedPlace.mapUrl || selectedPlace.station,
+        start: datetimeValue,
         title: selectedPlace.name,
       })
     : "#";
@@ -152,17 +154,20 @@ export function PlaceFollowupFlow({
                   </FollowupChip>
                 ))}
               </div>
-              <form className="mt-4 flex flex-col gap-3 sm:flex-row" onSubmit={handleCustomTimeSubmit}>
-                <label className="sr-only" htmlFor={`${category.id}-followup-time`}>
-                  行く時間を自由入力
+              <form className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center" onSubmit={handleCustomTimeSubmit}>
+                <label
+                  className="flex min-h-11 flex-1 items-center gap-3 rounded-control border border-line bg-paper px-4 text-sm text-ink transition focus-within:border-coffee/45 focus-within:ring-2 focus-within:ring-seal/25"
+                  htmlFor={`${category.id}-followup-time`}
+                >
+                  <span className="shrink-0 text-ink/60">今日</span>
+                  <input
+                    className="min-h-10 flex-1 bg-transparent text-sm text-ink outline-none"
+                    id={`${category.id}-followup-time`}
+                    onChange={(event) => setCustomTime(event.target.value)}
+                    type="time"
+                    value={customTime}
+                  />
                 </label>
-                <input
-                  className="min-h-11 flex-1 rounded-control border border-line bg-paper px-4 text-sm text-ink outline-none transition placeholder:text-ink/36 focus:border-coffee/45 focus:ring-2 focus:ring-seal/25"
-                  id={`${category.id}-followup-time`}
-                  onChange={(event) => setCustomTime(event.target.value)}
-                  placeholder={category.timePlaceholder}
-                  value={customTime}
-                />
                 <button
                   className="min-h-11 rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={!canConfirmTime}

@@ -7,11 +7,17 @@ export type ChatSessionMessage = {
 };
 
 export type ChatSessionPhase =
+  | "awaiting-assistant-reply"
+  | "awaiting-search-confirmation"
+  | "awaiting-user-reply"
+  | "awaiting-user-choice"
+  | "collecting-feedback"
   | "awaiting-assistant-question"
   | "awaiting-user-location"
   | "awaiting-assistant-list"
   | "recommendations-preview"
   | "recommendations-ready"
+  | "showing-route-choices"
   | "candidate-navigation-pending";
 
 export type RecommendationRoute = (typeof placeCategories)[keyof typeof placeCategories]["route"];
@@ -23,6 +29,11 @@ export type ChatSession = {
   isNavigating: boolean;
   messages: ChatSessionMessage[];
   phase: ChatSessionPhase;
+  feedbackSubmitted?: boolean;
+  feedbackText?: string;
+  pendingActivityLabel?: string;
+  pendingCategoryId?: keyof typeof placeCategories;
+  pendingLocationName?: string;
   recommendationRoute: RecommendationRoute;
   selectedStationName?: string;
   version: 1;
@@ -31,11 +42,17 @@ export type ChatSession = {
 export const CHAT_SESSION_STORAGE_KEY = "hitori-no-shiori.chat-session.v1";
 
 const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
+  "awaiting-assistant-reply",
+  "awaiting-search-confirmation",
+  "awaiting-user-reply",
+  "awaiting-user-choice",
+  "collecting-feedback",
   "awaiting-assistant-question",
   "awaiting-user-location",
   "awaiting-assistant-list",
   "recommendations-preview",
   "recommendations-ready",
+  "showing-route-choices",
   "candidate-navigation-pending",
 ];
 
@@ -56,7 +73,9 @@ export function createInitialChatSession(initialUserMessage: string): ChatSessio
         role: "user",
       },
     ],
-    phase: "awaiting-assistant-question",
+    phase: "awaiting-assistant-reply",
+    // LLM 判定が確定するまでの初期フォールバック値。全経路が失敗しても遷移先を持てるよう、
+    // キーワード判定の結果を暫定的に入れておく（確定時に ChatView が上書きする）。
     recommendationRoute: getRecommendationRoute(message),
     version: 1,
   };
@@ -103,6 +122,17 @@ export function readChatSession(): ChatSession | null {
       isNavigating: typeof parsedSession.isNavigating === "boolean" ? parsedSession.isNavigating : false,
       messages,
       phase: parsedSession.phase,
+      feedbackSubmitted:
+        typeof parsedSession.feedbackSubmitted === "boolean" ? parsedSession.feedbackSubmitted : undefined,
+      feedbackText: typeof parsedSession.feedbackText === "string" ? parsedSession.feedbackText : undefined,
+      pendingActivityLabel:
+        typeof parsedSession.pendingActivityLabel === "string" ? parsedSession.pendingActivityLabel : undefined,
+      pendingCategoryId:
+        typeof parsedSession.pendingCategoryId === "string" && parsedSession.pendingCategoryId in placeCategories
+          ? (parsedSession.pendingCategoryId as keyof typeof placeCategories)
+          : undefined,
+      pendingLocationName:
+        typeof parsedSession.pendingLocationName === "string" ? parsedSession.pendingLocationName : undefined,
       recommendationRoute: isRecommendationRoute(parsedSession.recommendationRoute)
         ? parsedSession.recommendationRoute
         : getRecommendationRoute(parsedSession.initialUserMessage),
@@ -162,14 +192,47 @@ function isRecommendationRoute(route: unknown): route is RecommendationRoute {
 }
 
 function normalizeRestoredChatSession(session: ChatSession): ChatSession {
-  if (session.phase !== "candidate-navigation-pending" && session.phase !== "recommendations-preview") {
-    return session;
+  // 遷移直前で離脱した状態はリスト表示済み（recommendations-ready）に戻す。
+  if (session.phase === "candidate-navigation-pending" || session.phase === "recommendations-preview") {
+    return {
+      ...session,
+      isAssistantLoading: false,
+      isNavigating: false,
+      phase: "recommendations-ready",
+    };
   }
 
-  return {
-    ...session,
-    isAssistantLoading: false,
-    isNavigating: false,
-    phase: "recommendations-ready",
-  };
+  // LLM 応答待ちで離脱した状態は、再マウント時に ChatView が再送信して復帰できるよう、
+  // ローディング表示を維持する。
+  if (
+    session.phase === "awaiting-assistant-reply" ||
+    session.phase === "awaiting-assistant-question" ||
+    session.phase === "awaiting-assistant-list"
+  ) {
+    return {
+      ...session,
+      isAssistantLoading: true,
+      isNavigating: false,
+      phase: "awaiting-assistant-reply",
+    };
+  }
+
+  // ユーザーの返信待ち・カテゴリ選択待ちで離脱した状態は、そのまま操作できる状態に戻す。
+  if (
+    session.phase === "awaiting-user-reply" ||
+    session.phase === "awaiting-user-choice" ||
+    session.phase === "awaiting-search-confirmation" ||
+    session.phase === "showing-route-choices" ||
+    session.phase === "collecting-feedback" ||
+    session.phase === "awaiting-user-location"
+  ) {
+    return {
+      ...session,
+      isAssistantLoading: false,
+      isNavigating: false,
+      phase: session.phase === "awaiting-user-location" ? "awaiting-user-reply" : session.phase,
+    };
+  }
+
+  return session;
 }

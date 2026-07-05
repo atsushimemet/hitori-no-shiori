@@ -11,8 +11,6 @@ export type Place = {
   googleMapUrl?: string;
   id?: string;
   instagramUrl?: string;
-  // 指定エリアに店舗が足りず、近隣エリアから補完された店舗であることを示す。
-  isSupplemented?: boolean;
   mapUrl?: string;
   name: string;
   paymentMethods?: PaymentMethod[];
@@ -37,9 +35,6 @@ export type PlaceCategoryId =
   | "workFriendlyCafe";
 
 export type PlaceCategoryConfig = {
-  // このカテゴリが本来対象とする指定エリア（広域地区名）。
-  // 指定エリアの店舗が3件未満のとき、近隣エリアから補完する判定に使う。
-  area: string;
   assistantListMessage: string;
   assistantQuestion: string;
   attributeSchema?: PlaceAttributeDefinition[];
@@ -64,7 +59,6 @@ function mapSearch(query: string) {
 
 export const placeCategories = {
   bookstore: {
-    area: "神保町",
     assistantListMessage: "神保町で、目的を決めずに歩ける本屋をリストアップしました。",
     assistantQuestion: "本屋さんですね。どのあたりで歩きたいですか？",
     calendarPlaceLabel: "本屋",
@@ -72,7 +66,7 @@ export const placeCategories = {
     heading: "今日のひとり時間に、\n合いそうな本屋を三軒。",
     id: "bookstore",
     interestTarget: "本屋",
-    keywords: ["本屋", "書店", "本", "ブックストア"],
+    keywords: ["本屋", "書店", "ブックストア"],
     label: "本屋",
     places: [
       {
@@ -116,7 +110,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の15時",
   },
   casualBar: {
-    area: "恵比寿",
     assistantListMessage: "恵比寿ですね、以下のバーをリストアップしました。",
     assistantQuestion: "近所のバーですね、場所はどちらを希望されますか？",
     attributeSchema: [{ key: "price_range", label: "価格帯" }],
@@ -153,8 +146,6 @@ export const placeCategories = {
         walkMinutes: 5,
       },
       {
-        // 恵比寿の店舗が2件になるよう、近隣エリア「代官山」に移設。
-        // 指定エリア（恵比寿）が3件未満になり、この店舗が近隣エリアからの補完として表示される。
         attributes: { price_range: "確認中" },
         counterSeats: 6,
         mapUrl: mapSearch("Book & Glass Daikanyama"),
@@ -174,7 +165,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の20時",
   },
   casualBistro: {
-    area: "代々木上原",
     assistantListMessage: "代々木上原で、ひとりでも入りやすいビストロをリストアップしました。",
     assistantQuestion: "カジュアルなビストロですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -226,7 +216,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の19時半",
   },
   hashiyaPasta: {
-    area: "代々木八幡",
     assistantListMessage: "代々木八幡で、ハシヤ系パスタの気分に合う店をリストアップしました。",
     assistantQuestion: "ハシヤ系パスタですね。行きやすいエリアはありますか？",
     calendarPlaceLabel: "お店",
@@ -278,7 +267,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の13時",
   },
   junKissa: {
-    area: "銀座",
     assistantListMessage: "銀座で静かに過ごせる喫茶店をリストアップしました。",
     assistantQuestion: "静かな喫茶店ですね。場所はどちらを希望されますか？",
     attributeSchema: [{ key: "smoking_policy", label: "喫煙可否" }],
@@ -334,7 +322,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の16時",
   },
   machiChuka: {
-    area: "神保町",
     assistantListMessage: "神保町で、ひとりでも入りやすい町中華をリストアップしました。",
     assistantQuestion: "町中華ですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -386,7 +373,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の19時",
   },
   oufuCurry: {
-    area: "神保町",
     assistantListMessage: "神保町で、ひとり時間に合う欧風カレーをリストアップしました。",
     assistantQuestion: "欧風カレーですね。どのあたりで探しますか？",
     calendarPlaceLabel: "お店",
@@ -438,7 +424,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の18時半",
   },
   vintageClothes: {
-    area: "高円寺",
     assistantListMessage: "高円寺で、ひとりでじっくり見られる古着屋をリストアップしました。",
     assistantQuestion: "古着ですね。どのあたりで探したいですか？",
     calendarPlaceLabel: "古着屋",
@@ -446,7 +431,7 @@ export const placeCategories = {
     heading: "今日のひとり時間に、\n合いそうな古着屋を三軒。",
     id: "vintageClothes",
     interestTarget: "古着屋",
-    keywords: ["古着", "ヴィンテージ", "ビンテージ", "服", "洋服"],
+    keywords: ["古着", "ヴィンテージ", "ビンテージ", "洋服"],
     label: "古着",
     places: [
       {
@@ -490,7 +475,6 @@ export const placeCategories = {
     timePlaceholder: "例：今日の16時",
   },
   workFriendlyCafe: {
-    area: "代々木上原",
     assistantListMessage: "代々木上原で、作業がはかどる場所をリストアップしました。",
     assistantQuestion: "作業がはかどる場所ですね。どのあたりで探しますか？",
     calendarPlaceLabel: "場所",
@@ -555,12 +539,27 @@ const routingCategories: PlaceCategoryConfig[] = [
   placeCategories.casualBar,
 ];
 
+// LLM を使えない（APIキー未設定・失敗）ときのフォールバック判定。
+// 単純な先頭一致だと単漢字キーワードが広く誤爆するため、ヒットしたキーワード数で
+// スコアリングし、最大スコアのカテゴリを選ぶ。同点は routingCategories の順で決定的に
+// タイブレークする。どのキーワードにも当たらなければ casualBar をデフォルトにする。
 export function resolvePlaceCategoryForMessage(message: string): PlaceCategoryConfig {
   const normalizedMessage = message.toLowerCase();
 
-  return (
-    routingCategories.find((category) =>
-      category.keywords.some((keyword) => normalizedMessage.includes(keyword.toLowerCase())),
-    ) ?? placeCategories.casualBar
-  );
+  let bestCategory: PlaceCategoryConfig | null = null;
+  let bestScore = 0;
+
+  for (const category of routingCategories) {
+    const score = category.keywords.reduce(
+      (count, keyword) => (normalizedMessage.includes(keyword.toLowerCase()) ? count + 1 : count),
+      0,
+    );
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCategory = category;
+    }
+  }
+
+  return bestCategory ?? placeCategories.casualBar;
 }

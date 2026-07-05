@@ -1,4 +1,4 @@
-export const mockInitialUserMessage = "仕事から離れて、静かな喫茶店で本を読みたい";
+export const mockInitialUserMessage = "気持ちが落ち着かない日。静かな喫茶店でコーヒーを飲みながらひと息つきたい";
 
 export const assistantLoadingText = "今日のひとり時間を探しています";
 

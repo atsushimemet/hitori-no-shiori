@@ -9,6 +9,7 @@ export type ChatSessionMessage = {
 export type ChatSessionPhase =
   | "awaiting-assistant-reply"
   | "awaiting-user-reply"
+  | "awaiting-user-choice"
   | "recommendations-ready"
   | "candidate-navigation-pending";
 
@@ -31,6 +32,7 @@ export const CHAT_SESSION_STORAGE_KEY = "hitori-no-shiori.chat-session.v1";
 const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
   "awaiting-assistant-reply",
   "awaiting-user-reply",
+  "awaiting-user-choice",
   "recommendations-ready",
   "candidate-navigation-pending",
 ];
@@ -180,8 +182,8 @@ function normalizeRestoredChatSession(session: ChatSession): ChatSession {
     };
   }
 
-  // ユーザーの返信待ちで離脱した状態は、そのまま入力できる状態に戻す。
-  if (session.phase === "awaiting-user-reply") {
+  // ユーザーの返信待ち・カテゴリ選択待ちで離脱した状態は、そのまま操作できる状態に戻す。
+  if (session.phase === "awaiting-user-reply" || session.phase === "awaiting-user-choice") {
     return {
       ...session,
       isAssistantLoading: false,

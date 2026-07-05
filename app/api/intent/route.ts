@@ -1,15 +1,21 @@
 import { NextResponse } from "next/server";
 import { resolveIntent, type IntentMessage } from "@/lib/intentResolution";
-import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
+import { placeCategories, resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
 
 export const dynamic = "force-dynamic";
 
-// 曖昧なときの聞き返しは会話全体で最大2回まで。これを超えたら確定させ、無限ループを防ぐ。
+// 曖昧なときの聞き返しは会話全体で最大2回まで。これを超えても絞れなければ、
+// 推測で勝手に遷移せず、ユーザーにカテゴリを選んでもらう（choose）。
 const MAX_CLARIFYING_QUESTIONS = 2;
+
+const CHOOSE_MESSAGE = "うまく絞りきれませんでした。よければ、今の気分に近いものを選んでください。";
+
+const ALL_CATEGORY_IDS = Object.keys(placeCategories);
 
 type IntentResponse =
   | { categoryId: string; source?: "fallback"; status: "resolved" }
-  | { assistantMessage: string; status: "question" };
+  | { assistantMessage: string; status: "question" }
+  | { assistantMessage: string; categoryIds: string[]; status: "choose" };
 
 function isIntentMessage(value: unknown): value is IntentMessage {
   if (!value || typeof value !== "object") {
@@ -68,11 +74,12 @@ export async function POST(request: Request) {
     if (clarifyingQuestionCount < MAX_CLARIFYING_QUESTIONS) {
       return NextResponse.json<IntentResponse>({ assistantMessage: result.assistantMessage, status: "question" });
     }
-    // 上限に達したら確定させる。LLM の推測カテゴリがあればそれを、無ければキーワード判定を使う。
-    if (result.categoryId) {
-      return NextResponse.json<IntentResponse>({ categoryId: result.categoryId, status: "resolved" });
-    }
-    return NextResponse.json<IntentResponse>(resolveByKeyword(messages));
+    // 上限に達してもまだ曖昧なら、推測で遷移せずユーザーにカテゴリを選んでもらう。
+    return NextResponse.json<IntentResponse>({
+      assistantMessage: CHOOSE_MESSAGE,
+      categoryIds: ALL_CATEGORY_IDS,
+      status: "choose",
+    });
   }
 
   return NextResponse.json<IntentResponse>({ categoryId: result.categoryId, status: "resolved" });

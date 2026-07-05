@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
+import { CategoryChoices } from "@/components/chat/CategoryChoices";
 import { ChatComposer } from "@/components/chat/ChatComposer";
 import { ChatMessage } from "@/components/chat/ChatMessage";
 import { PlaceRouteLoading } from "@/components/place/PlaceRouteLoading";
@@ -21,7 +22,8 @@ const ROUTE_TRANSITION_DELAY = 1200;
 
 type IntentApiResponse =
   | { categoryId: string; source?: "fallback"; status: "resolved" }
-  | { assistantMessage: string; status: "question" };
+  | { assistantMessage: string; status: "question" }
+  | { assistantMessage: string; categoryIds: string[]; status: "choose" };
 
 // 確定したカテゴリを会話に反映し、店舗ページへの遷移待ちにする。
 function applyResolvedCategory(current: ChatSession, category: PlaceCategoryConfig): ChatSession {
@@ -53,6 +55,19 @@ function applyClarifyingQuestion(current: ChatSession, assistantMessage: string)
       { content: assistantMessage, id: `assistant-question-${current.messages.length}`, role: "assistant" },
     ],
     phase: "awaiting-user-reply",
+  };
+}
+
+// 聞き返し上限に達しても絞れなかったとき、案内文を出してカテゴリ選択に切り替える。
+function applyCategoryChoicePrompt(current: ChatSession, assistantMessage: string): ChatSession {
+  return {
+    ...current,
+    isAssistantLoading: false,
+    messages: [
+      ...current.messages,
+      { content: assistantMessage, id: `assistant-choice-${current.messages.length}`, role: "assistant" },
+    ],
+    phase: "awaiting-user-choice",
   };
 }
 
@@ -124,6 +139,11 @@ export function ChatView() {
           return;
         }
 
+        if (result.status === "choose") {
+          setSession((current) => (current ? applyCategoryChoicePrompt(current, result.assistantMessage) : current));
+          return;
+        }
+
         const category = placeCategories[result.categoryId as keyof typeof placeCategories];
         if (!category) {
           resolveByFallback();
@@ -171,6 +191,16 @@ export function ChatView() {
 
     return () => window.clearTimeout(timeout);
   }, [isNavigating, nextRoute, phase, router, shouldReduceMotion]);
+
+  function handleSelectCategory(category: PlaceCategoryConfig) {
+    setSession((current) => {
+      if (!current || current.phase !== "awaiting-user-choice" || current.isNavigating) {
+        return current;
+      }
+
+      return applyResolvedCategory(current, category);
+    });
+  }
 
   function handleComposerSubmit() {
     if (!session) {
@@ -245,14 +275,18 @@ export function ChatView() {
                 ) : null}
               </AnimatePresence>
             </div>
-            <ChatComposer
-              disabled={isComposerDisabled}
-              onChange={(value) => {
-                setSession((current) => (current ? { ...current, composerValue: value } : current));
-              }}
-              onSubmit={handleComposerSubmit}
-              value={session.composerValue}
-            />
+            {phase === "awaiting-user-choice" ? (
+              <CategoryChoices disabled={isNavigating} onSelect={handleSelectCategory} />
+            ) : (
+              <ChatComposer
+                disabled={isComposerDisabled}
+                onChange={(value) => {
+                  setSession((current) => (current ? { ...current, composerValue: value } : current));
+                }}
+                onSubmit={handleComposerSubmit}
+                value={session.composerValue}
+              />
+            )}
           </section>
         ) : null}
       </motion.main>

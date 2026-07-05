@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { createCalendarEvent } from "@/lib/calendar";
 import type { Place } from "@/lib/placeCategories";
 import type { RecommendedPlace } from "@/lib/recommendations";
 
@@ -10,7 +9,6 @@ export type PlaceFollowupStep =
   | "select_place"
   | "ask_time"
   | "confirm_calendar"
-  | "calendar_loading"
   | "calendar_success"
   | "undecided";
 
@@ -71,13 +69,11 @@ export function usePlaceFollowupFlow(places: Place[]) {
     }
   }
 
-  async function addToCalendar() {
+  function addToCalendar() {
     if (!selectedPlaceName || !datetimeText) return;
 
     const selectedPlace = places.find((place) => place.name === selectedPlaceName);
 
-    setStep("calendar_loading");
-    await createCalendarEvent({ datetimeText, placeName: selectedPlaceName });
     setStep("calendar_success");
 
     if (selectedPlace?.station) {

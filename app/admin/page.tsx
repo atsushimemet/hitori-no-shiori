@@ -23,7 +23,7 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-paper px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 lg:px-10">
+    <main className="min-h-screen overflow-x-hidden bg-paper px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-16 sm:px-6 lg:px-10">
       <AdminPlaceManager
         initialCategories={data.categories}
         initialIsAuthenticated={isAuthenticated}

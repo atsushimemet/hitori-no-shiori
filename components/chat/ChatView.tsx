@@ -43,14 +43,14 @@ function applyResolvedCategory(current: ChatSession, category: PlaceCategoryConf
   };
 }
 
-// LLM が聞き返したときの会話反映。
+// LLM が聞き返したときの会話反映。聞き返しは複数回あり得るため、id は一意にする。
 function applyClarifyingQuestion(current: ChatSession, assistantMessage: string): ChatSession {
   return {
     ...current,
     isAssistantLoading: false,
     messages: [
       ...current.messages,
-      { content: assistantMessage, id: "assistant-question", role: "assistant" },
+      { content: assistantMessage, id: `assistant-question-${current.messages.length}`, role: "assistant" },
     ],
     phase: "awaiting-user-reply",
   };

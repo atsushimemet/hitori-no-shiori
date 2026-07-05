@@ -3,7 +3,9 @@ import { placeCategories, type PlaceCategoryId } from "@/lib/placeCategories";
 
 // トップページから送られてきたユーザーの入力（会話履歴）を LLM（Claude Haiku 4.5）に渡し、
 // 「今どんな気分で、何をしたいか」を読み取って 9 カテゴリのいずれかに対応づける。
-// 確信できれば resolved、本当に曖昧なときだけ 1 回だけ聞き返す question を返す。
+// 確信できれば resolved、まだ曖昧なら question で聞き返す（上限は呼び出し側で制御）。
+// question のときも最有力の推測カテゴリ（categoryId）を返し、聞き返し上限に達したときの
+// 確定に使えるようにする。
 // APIキー未設定・推論失敗・不正な出力のときは null を返し、呼び出し側（API ルート）が
 // キーワード判定（resolvePlaceCategoryForMessage）へフォールバックする。
 
@@ -14,7 +16,7 @@ export type IntentMessage = {
 
 export type IntentResolution =
   | { categoryId: PlaceCategoryId; status: "resolved" }
-  | { assistantMessage: string; status: "question" };
+  | { assistantMessage: string; categoryId: PlaceCategoryId | null; status: "question" };
 
 const CATEGORY_IDS = Object.keys(placeCategories) as PlaceCategoryId[];
 
@@ -49,13 +51,13 @@ function buildSystemPrompt(): string {
     "",
     "判定のルール:",
     "- カテゴリを 1 つに確信を持って絞れるなら status を \"resolved\" にし、categoryId にそのカテゴリの id を入れてください。",
-    "- どのカテゴリにも寄せられないほど曖昧なときだけ、status を \"question\" にし、assistantMessage に日本語の短くて温かい聞き返しを 1 文だけ入れてください。",
-    "- 聞き返しは最大 1 回まで。できる限り resolved を優先し、少しでも手がかりがあれば最も近いカテゴリに寄せてください。",
-    "- 会話に既にアシスタントの発言（聞き返し）が含まれている場合は、必ず resolved にしてください。",
+    "- まだ絞り切れないほど曖昧なときは、status を \"question\" にし、assistantMessage に日本語の短くて温かい聞き返しを 1 文だけ入れてください。",
+    "- 聞き返しは会話全体で最大 2 回までを目安にします。既に聞き返しをしている場合は、前の質問と重複しない、より絞り込むための質問にしてください。",
+    "- できる限り resolved を優先し、少しでも手がかりがあれば最も近いカテゴリに寄せてください。",
     "",
     "出力の補足:",
     "- status が \"resolved\" のとき assistantMessage は空文字にしてください。",
-    "- status が \"question\" のとき categoryId には現時点で最有力の推測を入れてください（この値は使われません）。",
+    "- status が \"question\" のときも categoryId には現時点で最有力の推測カテゴリを入れてください（聞き返し上限に達したとき、この値で確定します）。",
   ].join("\n");
 }
 
@@ -103,7 +105,11 @@ export async function resolveIntent(messages: IntentMessage[]): Promise<IntentRe
 
     if (parsed.status === "question" && typeof parsed.assistantMessage === "string" && parsed.assistantMessage.trim()) {
       console.log("意図判定: 聞き返しを行います");
-      return { assistantMessage: parsed.assistantMessage.trim(), status: "question" };
+      return {
+        assistantMessage: parsed.assistantMessage.trim(),
+        categoryId: isPlaceCategoryId(parsed.categoryId) ? parsed.categoryId : null,
+        status: "question",
+      };
     }
 
     return null;

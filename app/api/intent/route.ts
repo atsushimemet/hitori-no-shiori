@@ -4,6 +4,9 @@ import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
 
 export const dynamic = "force-dynamic";
 
+// 曖昧なときの聞き返しは会話全体で最大2回まで。これを超えたら確定させ、無限ループを防ぐ。
+const MAX_CLARIFYING_QUESTIONS = 2;
+
 type IntentResponse =
   | { categoryId: string; source?: "fallback"; status: "resolved" }
   | { assistantMessage: string; status: "question" };
@@ -50,7 +53,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "先頭は user のメッセージである必要があります" }, { status: 400 });
   }
 
-  const hasAssistantTurn = messages.some((message) => message.role === "assistant");
+  // これまでにアシスタントが聞き返した回数（＝アシスタント発言の数）。
+  const clarifyingQuestionCount = messages.filter((message) => message.role === "assistant").length;
 
   const result = await resolveIntent(messages);
 
@@ -60,11 +64,15 @@ export async function POST(request: Request) {
   }
 
   if (result.status === "question") {
-    // 聞き返しは 1 回まで。既に聞き返し済みなら強制的にカテゴリを確定させ、無限ループを防ぐ。
-    if (hasAssistantTurn) {
-      return NextResponse.json<IntentResponse>(resolveByKeyword(messages));
+    // 上限に達していなければ、もう一度聞き返す。
+    if (clarifyingQuestionCount < MAX_CLARIFYING_QUESTIONS) {
+      return NextResponse.json<IntentResponse>({ assistantMessage: result.assistantMessage, status: "question" });
     }
-    return NextResponse.json<IntentResponse>({ assistantMessage: result.assistantMessage, status: "question" });
+    // 上限に達したら確定させる。LLM の推測カテゴリがあればそれを、無ければキーワード判定を使う。
+    if (result.categoryId) {
+      return NextResponse.json<IntentResponse>({ categoryId: result.categoryId, status: "resolved" });
+    }
+    return NextResponse.json<IntentResponse>(resolveByKeyword(messages));
   }
 
   return NextResponse.json<IntentResponse>({ categoryId: result.categoryId, status: "resolved" });

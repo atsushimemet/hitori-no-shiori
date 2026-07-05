@@ -7,9 +7,8 @@ export type ChatSessionMessage = {
 };
 
 export type ChatSessionPhase =
-  | "awaiting-assistant-question"
-  | "awaiting-user-location"
-  | "awaiting-assistant-list"
+  | "awaiting-assistant-reply"
+  | "awaiting-user-reply"
   | "recommendations-ready"
   | "candidate-navigation-pending";
 
@@ -30,9 +29,8 @@ export type ChatSession = {
 export const CHAT_SESSION_STORAGE_KEY = "hitori-no-shiori.chat-session.v1";
 
 const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
-  "awaiting-assistant-question",
-  "awaiting-user-location",
-  "awaiting-assistant-list",
+  "awaiting-assistant-reply",
+  "awaiting-user-reply",
   "recommendations-ready",
   "candidate-navigation-pending",
 ];
@@ -54,7 +52,9 @@ export function createInitialChatSession(initialUserMessage: string): ChatSessio
         role: "user",
       },
     ],
-    phase: "awaiting-assistant-question",
+    phase: "awaiting-assistant-reply",
+    // LLM 判定が確定するまでの初期フォールバック値。全経路が失敗しても遷移先を持てるよう、
+    // キーワード判定の結果を暫定的に入れておく（確定時に ChatView が上書きする）。
     recommendationRoute: getRecommendationRoute(message),
     version: 1,
   };
@@ -160,14 +160,34 @@ function isRecommendationRoute(route: unknown): route is RecommendationRoute {
 }
 
 function normalizeRestoredChatSession(session: ChatSession): ChatSession {
-  if (session.phase !== "candidate-navigation-pending") {
-    return session;
+  // 遷移直前で離脱した状態はリスト表示済み（recommendations-ready）に戻す。
+  if (session.phase === "candidate-navigation-pending") {
+    return {
+      ...session,
+      isAssistantLoading: false,
+      isNavigating: false,
+      phase: "recommendations-ready",
+    };
   }
 
-  return {
-    ...session,
-    isAssistantLoading: false,
-    isNavigating: false,
-    phase: "recommendations-ready",
-  };
+  // LLM 応答待ちで離脱した状態は、再マウント時に ChatView が再送信して復帰できるよう、
+  // ローディング表示を維持する。
+  if (session.phase === "awaiting-assistant-reply") {
+    return {
+      ...session,
+      isAssistantLoading: true,
+      isNavigating: false,
+    };
+  }
+
+  // ユーザーの返信待ちで離脱した状態は、そのまま入力できる状態に戻す。
+  if (session.phase === "awaiting-user-reply") {
+    return {
+      ...session,
+      isAssistantLoading: false,
+      isNavigating: false,
+    };
+  }
+
+  return session;
 }

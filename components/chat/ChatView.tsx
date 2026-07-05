@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { AssistantLoading } from "@/components/chat/AssistantLoading";
@@ -12,28 +12,64 @@ import {
   readChatSession,
   writeChatSession,
   type ChatSession,
+  type ChatSessionMessage,
 } from "@/lib/chatSession";
 import { mockInitialUserMessage } from "@/lib/mockChat";
-import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
+import { placeCategories, resolvePlaceCategoryForMessage, type PlaceCategoryConfig } from "@/lib/placeCategories";
 
-const ASSISTANT_REPLY_DELAY = 1500;
 const ROUTE_TRANSITION_DELAY = 1200;
+
+type IntentApiResponse =
+  | { categoryId: string; source?: "fallback"; status: "resolved" }
+  | { assistantMessage: string; status: "question" };
+
+// 確定したカテゴリを会話に反映し、店舗ページへの遷移待ちにする。
+function applyResolvedCategory(current: ChatSession, category: PlaceCategoryConfig): ChatSession {
+  const listMessageId = `assistant-${category.id}-list-message`;
+  const hasListMessage = current.messages.some((message) => message.id === listMessageId);
+
+  return {
+    ...current,
+    isAssistantLoading: false,
+    isNavigating: true,
+    messages: hasListMessage
+      ? current.messages
+      : [
+          ...current.messages,
+          { content: category.assistantListMessage, id: listMessageId, role: "assistant" },
+        ],
+    phase: "candidate-navigation-pending",
+    recommendationRoute: category.route,
+  };
+}
+
+// LLM が聞き返したときの会話反映。
+function applyClarifyingQuestion(current: ChatSession, assistantMessage: string): ChatSession {
+  return {
+    ...current,
+    isAssistantLoading: false,
+    messages: [
+      ...current.messages,
+      { content: assistantMessage, id: "assistant-question", role: "assistant" },
+    ],
+    phase: "awaiting-user-reply",
+  };
+}
 
 export function ChatView() {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const conversationRef = useRef<HTMLDivElement>(null);
   const hasFocusedConversationRef = useRef(false);
+  const inFlightRef = useRef(false);
+  const lastRequestedCountRef = useRef(0);
   const [hasLoadedSession, setHasLoadedSession] = useState(false);
   const [session, setSession] = useState<ChatSession | null>(null);
   const phase = session?.phase;
   const isAssistantLoading = session?.isAssistantLoading ?? false;
   const isNavigating = session?.isNavigating ?? false;
-  const isComposerDisabled = isAssistantLoading || isNavigating || phase !== "awaiting-user-location";
-  const category = resolvePlaceCategoryForMessage(session?.initialUserMessage ?? mockInitialUserMessage);
-  const assistantQuestion = category.assistantQuestion;
-  const assistantListMessage = category.assistantListMessage;
-  const nextRoute = session?.recommendationRoute ?? category.route;
+  const isComposerDisabled = isAssistantLoading || isNavigating || phase !== "awaiting-user-reply";
+  const nextRoute = session?.recommendationRoute;
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
@@ -59,84 +95,70 @@ export function ChatView() {
     writeChatSession(session);
   }, [hasLoadedSession, session]);
 
+  // 会話履歴を /api/intent に送り、結果（確定 or 聞き返し）を会話へ反映する。
+  const requestIntent = useCallback(
+    async (currentMessages: ChatSessionMessage[], initialUserMessage: string) => {
+      const resolveByFallback = () => {
+        const category = resolvePlaceCategoryForMessage(initialUserMessage);
+        setSession((current) => (current ? applyResolvedCategory(current, category) : current));
+      };
+
+      try {
+        const response = await fetch("/api/intent", {
+          body: JSON.stringify({
+            messages: currentMessages.map((message) => ({ content: message.content, role: message.role })),
+          }),
+          headers: { "content-type": "application/json" },
+          method: "POST",
+        });
+
+        if (!response.ok) {
+          resolveByFallback();
+          return;
+        }
+
+        const result = (await response.json()) as IntentApiResponse;
+
+        if (result.status === "question") {
+          setSession((current) => (current ? applyClarifyingQuestion(current, result.assistantMessage) : current));
+          return;
+        }
+
+        const category = placeCategories[result.categoryId as keyof typeof placeCategories];
+        if (!category) {
+          resolveByFallback();
+          return;
+        }
+
+        setSession((current) => (current ? applyResolvedCategory(current, category) : current));
+      } catch (error) {
+        console.error("意図判定リクエストに失敗しました", error);
+        resolveByFallback();
+      }
+    },
+    [],
+  );
+
+  // 応答待ち（初回マウント・ユーザー返信後）になったら一度だけ送信する。
   useEffect(() => {
-    if (phase !== "awaiting-assistant-question" || !isAssistantLoading) {
+    if (!hasLoadedSession || !session || session.phase !== "awaiting-assistant-reply") {
       return;
     }
 
-    const timeout = window.setTimeout(
-      () => {
-        setSession((current) => {
-          if (!current || current.phase !== "awaiting-assistant-question" || !current.isAssistantLoading) {
-            return current;
-          }
-
-          const hasAssistantQuestion = current.messages.some((message) => message.id === "assistant-question");
-
-          return {
-            ...current,
-            isAssistantLoading: false,
-            messages: hasAssistantQuestion
-              ? current.messages
-              : [
-                  ...current.messages,
-                  {
-                    content: assistantQuestion,
-                    id: "assistant-question",
-                    role: "assistant",
-                  },
-                ],
-            phase: "awaiting-user-location",
-          };
-        });
-      },
-      shouldReduceMotion ? 400 : ASSISTANT_REPLY_DELAY,
-    );
-
-    return () => window.clearTimeout(timeout);
-  }, [assistantQuestion, isAssistantLoading, phase, shouldReduceMotion]);
-
-  useEffect(() => {
-    if (phase !== "awaiting-assistant-list" || !isAssistantLoading) {
+    if (inFlightRef.current || lastRequestedCountRef.current === session.messages.length) {
       return;
     }
 
-    const timeout = window.setTimeout(
-      () => {
-        setSession((current) => {
-          if (!current || current.phase !== "awaiting-assistant-list" || !current.isAssistantLoading) {
-            return current;
-          }
+    inFlightRef.current = true;
+    lastRequestedCountRef.current = session.messages.length;
 
-          const assistantListMessageId = `assistant-${category.id}-list-message`;
-          const hasAssistantListMessage = current.messages.some((message) => message.id === assistantListMessageId);
-
-          return {
-            ...current,
-            isAssistantLoading: false,
-            isNavigating: true,
-            messages: hasAssistantListMessage
-              ? current.messages
-              : [
-                  ...current.messages,
-                  {
-                    content: assistantListMessage,
-                    id: assistantListMessageId,
-                    role: "assistant",
-                  },
-                ],
-            phase: "candidate-navigation-pending",
-          };
-        });
-      },
-      shouldReduceMotion ? 400 : ASSISTANT_REPLY_DELAY,
-    );
-
-    return () => window.clearTimeout(timeout);
-  }, [assistantListMessage, category.id, isAssistantLoading, phase, shouldReduceMotion]);
+    void requestIntent(session.messages, session.initialUserMessage).finally(() => {
+      inFlightRef.current = false;
+    });
+  }, [hasLoadedSession, requestIntent, session]);
 
   useEffect(() => {
-    if (phase !== "candidate-navigation-pending" || !isNavigating) {
+    if (phase !== "candidate-navigation-pending" || !isNavigating || !nextRoute) {
       return;
     }
 
@@ -156,7 +178,7 @@ export function ChatView() {
     }
 
     setSession((current) => {
-      if (!current || current.phase !== "awaiting-user-location" || current.isAssistantLoading || current.isNavigating) {
+      if (!current || current.phase !== "awaiting-user-reply" || current.isAssistantLoading || current.isNavigating) {
         return current;
       }
 
@@ -178,8 +200,7 @@ export function ChatView() {
             role: "user",
           },
         ],
-        phase: "awaiting-assistant-list",
-        selectedStationName: nextMessage,
+        phase: "awaiting-assistant-reply",
       };
     });
   }

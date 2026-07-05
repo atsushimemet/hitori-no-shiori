@@ -72,7 +72,7 @@ export const placeCategories = {
     heading: "今日のひとり時間に、\n合いそうな本屋を三軒。",
     id: "bookstore",
     interestTarget: "本屋",
-    keywords: ["本屋", "書店", "本", "ブックストア"],
+    keywords: ["本屋", "書店", "ブックストア"],
     label: "本屋",
     places: [
       {
@@ -446,7 +446,7 @@ export const placeCategories = {
     heading: "今日のひとり時間に、\n合いそうな古着屋を三軒。",
     id: "vintageClothes",
     interestTarget: "古着屋",
-    keywords: ["古着", "ヴィンテージ", "ビンテージ", "服", "洋服"],
+    keywords: ["古着", "ヴィンテージ", "ビンテージ", "洋服"],
     label: "古着",
     places: [
       {
@@ -555,12 +555,27 @@ const routingCategories: PlaceCategoryConfig[] = [
   placeCategories.casualBar,
 ];
 
+// LLM を使えない（APIキー未設定・失敗）ときのフォールバック判定。
+// 単純な先頭一致だと単漢字キーワードが広く誤爆するため、ヒットしたキーワード数で
+// スコアリングし、最大スコアのカテゴリを選ぶ。同点は routingCategories の順で決定的に
+// タイブレークする。どのキーワードにも当たらなければ casualBar をデフォルトにする。
 export function resolvePlaceCategoryForMessage(message: string): PlaceCategoryConfig {
   const normalizedMessage = message.toLowerCase();
 
-  return (
-    routingCategories.find((category) =>
-      category.keywords.some((keyword) => normalizedMessage.includes(keyword.toLowerCase())),
-    ) ?? placeCategories.casualBar
-  );
+  let bestCategory: PlaceCategoryConfig | null = null;
+  let bestScore = 0;
+
+  for (const category of routingCategories) {
+    const score = category.keywords.reduce(
+      (count, keyword) => (normalizedMessage.includes(keyword.toLowerCase()) ? count + 1 : count),
+      0,
+    );
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCategory = category;
+    }
+  }
+
+  return bestCategory ?? placeCategories.casualBar;
 }

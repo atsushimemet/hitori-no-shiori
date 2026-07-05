@@ -8,9 +8,12 @@ export type ChatSessionMessage = {
 
 export type ChatSessionPhase =
   | "awaiting-assistant-reply"
+  | "awaiting-search-confirmation"
   | "awaiting-user-reply"
   | "awaiting-user-choice"
+  | "collecting-feedback"
   | "recommendations-ready"
+  | "showing-route-choices"
   | "candidate-navigation-pending";
 
 export type RecommendationRoute = (typeof placeCategories)[keyof typeof placeCategories]["route"];
@@ -22,6 +25,11 @@ export type ChatSession = {
   isNavigating: boolean;
   messages: ChatSessionMessage[];
   phase: ChatSessionPhase;
+  feedbackSubmitted?: boolean;
+  feedbackText?: string;
+  pendingActivityLabel?: string;
+  pendingCategoryId?: keyof typeof placeCategories;
+  pendingLocationName?: string;
   recommendationRoute: RecommendationRoute;
   selectedStationName?: string;
   version: 1;
@@ -31,9 +39,12 @@ export const CHAT_SESSION_STORAGE_KEY = "hitori-no-shiori.chat-session.v1";
 
 const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
   "awaiting-assistant-reply",
+  "awaiting-search-confirmation",
   "awaiting-user-reply",
   "awaiting-user-choice",
+  "collecting-feedback",
   "recommendations-ready",
+  "showing-route-choices",
   "candidate-navigation-pending",
 ];
 
@@ -103,6 +114,17 @@ export function readChatSession(): ChatSession | null {
       isNavigating: typeof parsedSession.isNavigating === "boolean" ? parsedSession.isNavigating : false,
       messages,
       phase: parsedSession.phase,
+      feedbackSubmitted:
+        typeof parsedSession.feedbackSubmitted === "boolean" ? parsedSession.feedbackSubmitted : undefined,
+      feedbackText: typeof parsedSession.feedbackText === "string" ? parsedSession.feedbackText : undefined,
+      pendingActivityLabel:
+        typeof parsedSession.pendingActivityLabel === "string" ? parsedSession.pendingActivityLabel : undefined,
+      pendingCategoryId:
+        typeof parsedSession.pendingCategoryId === "string" && parsedSession.pendingCategoryId in placeCategories
+          ? (parsedSession.pendingCategoryId as keyof typeof placeCategories)
+          : undefined,
+      pendingLocationName:
+        typeof parsedSession.pendingLocationName === "string" ? parsedSession.pendingLocationName : undefined,
       recommendationRoute: isRecommendationRoute(parsedSession.recommendationRoute)
         ? parsedSession.recommendationRoute
         : getRecommendationRoute(parsedSession.initialUserMessage),
@@ -183,7 +205,13 @@ function normalizeRestoredChatSession(session: ChatSession): ChatSession {
   }
 
   // ユーザーの返信待ち・カテゴリ選択待ちで離脱した状態は、そのまま操作できる状態に戻す。
-  if (session.phase === "awaiting-user-reply" || session.phase === "awaiting-user-choice") {
+  if (
+    session.phase === "awaiting-user-reply" ||
+    session.phase === "awaiting-user-choice" ||
+    session.phase === "awaiting-search-confirmation" ||
+    session.phase === "showing-route-choices" ||
+    session.phase === "collecting-feedback"
+  ) {
     return {
       ...session,
       isAssistantLoading: false,

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, MapPin } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { motion, useReducedMotion } from "motion/react";
 import { duration, ease } from "@/components/motion/tokens";
 import { cn } from "@/lib/cn";
@@ -101,12 +101,6 @@ export function PlaceCard({ attributeSchema = [], className, index, place, revea
           <p className="mt-2 break-words text-sm text-bark">
             {place.station}｜徒歩{place.walkMinutes}分
           </p>
-          {place.isSupplemented ? (
-            <span className="mt-3 inline-flex items-center gap-1.5 rounded-full border border-seal/40 bg-seal/[0.08] px-2.5 py-1 text-xs font-medium tracking-[0.02em] text-seal">
-              <MapPin size={12} strokeWidth={1.8} />
-              近隣エリアから補完
-            </span>
-          ) : null}
         </div>
       </div>
 

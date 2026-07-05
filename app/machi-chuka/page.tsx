@@ -1,11 +1,17 @@
 import { PlaceListView } from "@/components/place/PlaceListView";
 import { getRandomPlacesByCategorySlug } from "@/lib/places";
 import { placeCategories } from "@/lib/placeCategories";
+import { getRequestedStation, type PlaceSearchParams } from "@/lib/searchParams";
 
 export const dynamic = "force-dynamic";
 
-export default async function MachiChukaPage() {
-  const category = await getRandomPlacesByCategorySlug(placeCategories.machiChuka);
+type MachiChukaPageProps = {
+  searchParams?: PlaceSearchParams;
+};
 
-  return <PlaceListView category={category} />;
+export default async function MachiChukaPage({ searchParams }: MachiChukaPageProps) {
+  const requestedStation = await getRequestedStation(searchParams);
+  const category = await getRandomPlacesByCategorySlug(placeCategories.machiChuka, 3, requestedStation);
+
+  return <PlaceListView category={category} requestedStation={requestedStation} />;
 }

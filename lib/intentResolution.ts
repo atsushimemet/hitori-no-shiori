@@ -15,10 +15,11 @@ export type IntentMessage = {
 };
 
 export type IntentResolution =
-  | { categoryId: PlaceCategoryId; status: "resolved" }
+  | { activityLabel: string; categoryId: PlaceCategoryId; locationName: string; status: "resolved" }
   | { assistantMessage: string; categoryId: PlaceCategoryId | null; status: "question" };
 
 const CATEGORY_IDS = Object.keys(placeCategories) as PlaceCategoryId[];
+const UNKNOWN_CATEGORY_ID = "unknown";
 
 function isPlaceCategoryId(value: unknown): value is PlaceCategoryId {
   return typeof value === "string" && value in placeCategories;
@@ -30,11 +31,13 @@ function isPlaceCategoryId(value: unknown): value is PlaceCategoryId {
 const RESPONSE_SCHEMA = {
   additionalProperties: false,
   properties: {
+    activityLabel: { type: "string" },
     assistantMessage: { type: "string" },
-    categoryId: { enum: CATEGORY_IDS, type: "string" },
+    categoryId: { enum: [...CATEGORY_IDS, UNKNOWN_CATEGORY_ID], type: "string" },
+    locationName: { type: "string" },
     status: { enum: ["resolved", "question"], type: "string" },
   },
-  required: ["status", "categoryId", "assistantMessage"],
+  required: ["status", "categoryId", "assistantMessage", "activityLabel", "locationName"],
   type: "object",
 };
 
@@ -45,19 +48,21 @@ function buildSystemPrompt(): string {
 
   return [
     "あなたは、ひとりの休日の過ごし方に迷っている人へ、行き先のお店を提案する案内役です。",
-    "ユーザーとの会話から「今どんな気分で、何をしたいか」を読み取り、次の 9 カテゴリのうち最も合う 1 つに対応づけてください。",
+    "ユーザーとの会話から「何をしたいか」と「どの駅の近くで探したいか」を読み取り、次の 9 カテゴリのうち最も合う 1 つに対応づけてください。",
     "",
     categoryList,
     "",
     "判定のルール:",
-    "- カテゴリを 1 つに確信を持って絞れるなら status を \"resolved\" にし、categoryId にそのカテゴリの id を入れてください。",
-    "- まだ絞り切れないほど曖昧なときは、status を \"question\" にし、assistantMessage に日本語の短くて温かい聞き返しを 1 文だけ入れてください。",
-    "- 聞き返しは会話全体で最大 2 回までを目安にします。既に聞き返しをしている場合は、前の質問と重複しない、より絞り込むための質問にしてください。",
-    "- できる限り resolved を優先し、少しでも手がかりがあれば最も近いカテゴリに寄せてください。",
+    "- 「何をしたいか」と「駅名」の両方がユーザー発話に明示され、カテゴリを 1 つに絞れるなら status を \"resolved\" にしてください。",
+    "- resolved のときは categoryId、activityLabel（例: 本屋、カジュアルバー）、locationName（例: 神保町、渋谷）を入れてください。",
+    "- カテゴリ説明、候補店舗、過去の代表エリアから駅名を推測してはいけません。",
+    "- 「何をしたいか」または「駅名」のどちらかが足りないときは、status を \"question\" にし、assistantMessage に日本語の短い聞き返しを 1 文だけ入れてください。",
+    "- question のとき、カテゴリが推測できない場合は categoryId を \"unknown\" にしてください。",
+    "- 既に聞き返しをしている場合は、前の質問と重複しない、足りない情報だけを聞いてください。",
     "",
     "出力の補足:",
     "- status が \"resolved\" のとき assistantMessage は空文字にしてください。",
-    "- status が \"question\" のときも categoryId には現時点で最有力の推測カテゴリを入れてください（聞き返し上限に達したとき、この値で確定します）。",
+    "- status が \"question\" のとき activityLabel と locationName は空文字にしてください。",
   ].join("\n");
 }
 
@@ -89,8 +94,10 @@ export async function resolveIntent(messages: IntentMessage[]): Promise<IntentRe
     }
 
     const parsed = JSON.parse(textBlock.text) as {
+      activityLabel?: unknown;
       assistantMessage?: unknown;
       categoryId?: unknown;
+      locationName?: unknown;
       status?: unknown;
     };
 
@@ -98,9 +105,21 @@ export async function resolveIntent(messages: IntentMessage[]): Promise<IntentRe
       `意図判定: Claude 使用量 input=${response.usage.input_tokens} / output=${response.usage.output_tokens} tokens`,
     );
 
-    if (parsed.status === "resolved" && isPlaceCategoryId(parsed.categoryId)) {
+    if (
+      parsed.status === "resolved" &&
+      isPlaceCategoryId(parsed.categoryId) &&
+      typeof parsed.activityLabel === "string" &&
+      parsed.activityLabel.trim() &&
+      typeof parsed.locationName === "string" &&
+      parsed.locationName.trim()
+    ) {
       console.log(`意図判定: カテゴリを「${parsed.categoryId}」に確定しました`);
-      return { categoryId: parsed.categoryId, status: "resolved" };
+      return {
+        activityLabel: parsed.activityLabel.trim(),
+        categoryId: parsed.categoryId,
+        locationName: parsed.locationName.trim().replace(/駅$/, ""),
+        status: "resolved",
+      };
     }
 
     if (parsed.status === "question" && typeof parsed.assistantMessage === "string" && parsed.assistantMessage.trim()) {

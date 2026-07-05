@@ -1,8 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase";
-import { getNearbyAreas, resolveArea } from "@/lib/areaProximity";
 import type { Place, PlaceAttributeDefinition, PlaceCategoryConfig } from "@/lib/placeCategories";
 
-// 補完判定のため、指定件数だけでなくカテゴリの全公開店舗を取得する上限。
+// 駅名一致で抽出するため、カテゴリの全公開店舗を取得する上限。
 const SUPPLEMENT_FETCH_LIMIT = 100;
 
 type PlaceCategoryRow = {
@@ -77,93 +76,44 @@ function mergeCategory(fallback: PlaceCategoryConfig, row: PlaceCategoryRow): Pl
   };
 }
 
-function placeKey(place: Place, index: number): string {
-  return place.id ?? `${place.name}-${index}`;
+function normalizeStationName(station: string) {
+  return station.trim().replace(/駅$/, "");
 }
 
-// 指定エリアの店舗を優先して採用し、limitCount 件に満たない場合は
-// 近隣エリアから近い順で補完する。補完された店舗には isSupplemented: true を付ける。
-export function selectPlacesWithSupplement(
+// ユーザーがヒアリングで確定した駅名に一致する店舗だけを採用する。
+// 駅名未指定・一致店舗なしの場合は、モック用の代表エリアへフォールバックしない。
+export function selectPlacesByStation(
   places: Place[],
-  area: string,
+  stationName: string | undefined,
   limitCount: number,
-  categoryLabel: string,
 ): Place[] {
-  if (limitCount <= 0 || places.length === 0) {
+  const normalizedStationName = stationName ? normalizeStationName(stationName) : "";
+
+  if (limitCount <= 0 || places.length === 0 || !normalizedStationName) {
     return [];
   }
 
-  const used = new Set<string>();
-  const selected: Place[] = [];
-
-  // 1. 指定エリアの店舗をそのまま採用する。
-  places.forEach((place, index) => {
-    if (selected.length >= limitCount) {
-      return;
-    }
-    if (resolveArea(place.station) === area) {
-      used.add(placeKey(place, index));
-      selected.push({ ...place, isSupplemented: false });
-    }
-  });
-
-  const primaryCount = selected.length;
-
-  // 2. 指定エリアが limitCount 件未満なら、近隣エリアから近い順に補完する。
-  if (selected.length < limitCount) {
-    for (const nearbyArea of getNearbyAreas(area)) {
-      if (selected.length >= limitCount) {
-        break;
-      }
-      places.forEach((place, index) => {
-        const key = placeKey(place, index);
-        if (selected.length >= limitCount || used.has(key)) {
-          return;
-        }
-        if (resolveArea(place.station) === nearbyArea) {
-          used.add(key);
-          selected.push({ ...place, isSupplemented: true });
-        }
-      });
-    }
-
-    // 3. 近隣マップに載っていないエリアの店舗しか残っていない場合も、
-    //    画面が空にならないよう最終手段として補完扱いで埋める。
-    places.forEach((place, index) => {
-      const key = placeKey(place, index);
-      if (selected.length >= limitCount || used.has(key)) {
-        return;
-      }
-      used.add(key);
-      selected.push({ ...place, isSupplemented: true });
-    });
-  }
-
-  const supplementedCount = selected.length - primaryCount;
-  if (supplementedCount > 0) {
-    console.info(
-      `[補完] ${categoryLabel}：指定エリア「${area}」の店舗が${primaryCount}件のため、近隣エリアから${supplementedCount}件補完しました。`,
-    );
-  }
-
-  return selected;
+  return places
+    .filter((place) => normalizeStationName(place.station) === normalizedStationName)
+    .slice(0, limitCount);
 }
 
 export async function getRandomPlacesByCategorySlug(
   fallback: PlaceCategoryConfig,
   limitCount = 3,
+  stationName?: string,
 ): Promise<PlaceCategoryConfig> {
   const supabase = createSupabaseServerClient();
 
-  // Supabase 未接続時はカテゴリ定義のモック店舗にも補完ロジックを適用する。
+  // Supabase 未接続時も、駅名未指定なら代表エリアへフォールバックしない。
   if (!supabase) {
     return {
       ...fallback,
-      places: selectPlacesWithSupplement(fallback.places, fallback.area, limitCount, fallback.label),
+      places: selectPlacesByStation(fallback.places, stationName, limitCount),
     };
   }
 
-  // 補完判定のためカテゴリの全公開店舗を取得してから、指定件数を選抜する。
+  // 駅名一致判定のためカテゴリの全公開店舗を取得してから、指定件数を選抜する。
   const { data, error } = await supabase.rpc("get_random_places_by_category", {
     category_slug: fallback.slug,
     limit_count: SUPPLEMENT_FETCH_LIMIT,
@@ -185,6 +135,6 @@ export async function getRandomPlacesByCategorySlug(
 
   return {
     ...category,
-    places: selectPlacesWithSupplement(allPlaces, category.area, limitCount, category.label),
+    places: selectPlacesByStation(allPlaces, stationName, limitCount),
   };
 }

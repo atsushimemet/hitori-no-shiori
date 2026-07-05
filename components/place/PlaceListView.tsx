@@ -20,6 +20,7 @@ const placeTheme: CSSProperties = {
 
 type PlaceListViewProps = {
   category: PlaceCategoryConfig;
+  requestedStation?: string;
 };
 
 function subscribeToChatSession(onStoreChange: () => void) {
@@ -39,7 +40,7 @@ function getSelectedStationNameForRoute(route: string) {
   return stationName || null;
 }
 
-export function PlaceListView({ category }: PlaceListViewProps) {
+export function PlaceListView({ category, requestedStation }: PlaceListViewProps) {
   const router = useRouter();
   const shouldReduceMotion = useReducedMotion();
   const [showFollowup, setShowFollowup] = useState(false);
@@ -57,9 +58,10 @@ export function PlaceListView({ category }: PlaceListViewProps) {
   }, []);
 
   const places = category.places.slice(0, 3);
-  const description = selectedStationName
-    ? `${selectedStationName}で、静かに過ごせる場所を選びました。`
-    : category.description;
+  const displayStation = requestedStation?.trim() || selectedStationName;
+  const description = displayStation
+    ? `${displayStation}で、静かに過ごせる場所を選びました。`
+    : "駅名を指定してチャットから探すと、候補の店舗が表示されます。";
 
   const handleViewedAll = useCallback(() => {
     setShowFollowup(true);
@@ -145,10 +147,19 @@ export function PlaceListView({ category }: PlaceListViewProps) {
           <motion.div className="hairline mt-8" variants={headingVariants} />
         </motion.div>
         <div ref={carouselRef}>
-          <PlaceList attributeSchema={category.attributeSchema} onViewedAll={handleViewedAll} places={places} />
+          {places.length > 0 ? (
+            <PlaceList attributeSchema={category.attributeSchema} onViewedAll={handleViewedAll} places={places} />
+          ) : (
+            <div className="max-w-3xl rounded-card border border-line bg-cream p-8 text-left shadow-plate">
+              <p className="font-serif text-2xl font-medium text-coffee">表示できる店舗がありません。</p>
+              <p className="mt-3 text-sm leading-7 text-ink/66">
+                駅名と行きたい店舗の種類をチャットで指定すると、条件に合う店舗ページを表示します。
+              </p>
+            </div>
+          )}
         </div>
         <AnimatePresence>
-          {showFollowup ? (
+          {places.length > 0 && showFollowup ? (
             <PlaceFollowupFlow
               category={category}
               onRestartConversation={handleRestartConversation}

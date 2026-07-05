@@ -16,32 +16,54 @@ import {
   type ChatSessionMessage,
 } from "@/lib/chatSession";
 import { mockInitialUserMessage } from "@/lib/mockChat";
-import { placeCategories, resolvePlaceCategoryForMessage, type PlaceCategoryConfig } from "@/lib/placeCategories";
+import {
+  placeCategories,
+  resolvePlaceCategoryForMessage,
+  type PlaceCategoryConfig,
+  type PlaceCategoryId,
+} from "@/lib/placeCategories";
 
 const ROUTE_TRANSITION_DELAY = 1200;
 
 type IntentApiResponse =
-  | { categoryId: string; source?: "fallback"; status: "resolved" }
+  | { activityLabel: string; categoryId: string; locationName: string; source?: "fallback"; status: "resolved" }
   | { assistantMessage: string; status: "question" }
   | { assistantMessage: string; categoryIds: string[]; status: "choose" };
 
-// 確定したカテゴリを会話に反映し、店舗ページへの遷移待ちにする。
-function applyResolvedCategory(current: ChatSession, category: PlaceCategoryConfig): ChatSession {
-  const listMessageId = `assistant-${category.id}-list-message`;
-  const hasListMessage = current.messages.some((message) => message.id === listMessageId);
+function isPlaceCategoryId(value: string): value is PlaceCategoryId {
+  return value in placeCategories;
+}
+
+// やりたいこと・場所が揃ったら、すぐ遷移せず確認選択肢を出す。
+function applySearchConfirmation(
+  current: ChatSession,
+  category: PlaceCategoryConfig,
+  activityLabel: string,
+  locationName: string,
+): ChatSession {
+  const confirmationMessageId = `assistant-${category.id}-${locationName}-confirmation`;
+  const hasConfirmationMessage = current.messages.some((message) => message.id === confirmationMessageId);
 
   return {
     ...current,
     isAssistantLoading: false,
-    isNavigating: true,
-    messages: hasListMessage
+    isNavigating: false,
+    messages: hasConfirmationMessage
       ? current.messages
       : [
           ...current.messages,
-          { content: category.assistantListMessage, id: listMessageId, role: "assistant" },
+          {
+            content: `${locationName}で${activityLabel}のお店を探しますか？`,
+            id: confirmationMessageId,
+            role: "assistant",
+          },
         ],
-    phase: "candidate-navigation-pending",
+    pendingActivityLabel: activityLabel,
+    pendingCategoryId: category.id,
+    pendingLocationName: locationName,
+    phase: "awaiting-search-confirmation",
     recommendationRoute: category.route,
+    selectedStationName: locationName,
   };
 }
 
@@ -115,7 +137,11 @@ export function ChatView() {
     async (currentMessages: ChatSessionMessage[], initialUserMessage: string) => {
       const resolveByFallback = () => {
         const category = resolvePlaceCategoryForMessage(initialUserMessage);
-        setSession((current) => (current ? applyResolvedCategory(current, category) : current));
+        setSession((current) =>
+          current
+            ? applyClarifyingQuestion(current, `${category.label}なら、どのあたりで探しましょうか？`)
+            : current,
+        );
       };
 
       try {
@@ -144,13 +170,17 @@ export function ChatView() {
           return;
         }
 
-        const category = placeCategories[result.categoryId as keyof typeof placeCategories];
+        const category = isPlaceCategoryId(result.categoryId) ? placeCategories[result.categoryId] : null;
         if (!category) {
           resolveByFallback();
           return;
         }
 
-        setSession((current) => (current ? applyResolvedCategory(current, category) : current));
+        setSession((current) =>
+          current
+            ? applySearchConfirmation(current, category, result.activityLabel, result.locationName)
+            : current,
+        );
       } catch (error) {
         console.error("意図判定リクエストに失敗しました", error);
         resolveByFallback();
@@ -184,13 +214,15 @@ export function ChatView() {
 
     const timeout = window.setTimeout(
       () => {
-        router.push(nextRoute);
+        const station = session?.selectedStationName?.trim();
+        const href = station ? `${nextRoute}?station=${encodeURIComponent(station)}` : nextRoute;
+        router.push(href);
       },
       shouldReduceMotion ? 250 : ROUTE_TRANSITION_DELAY,
     );
 
     return () => window.clearTimeout(timeout);
-  }, [isNavigating, nextRoute, phase, router, shouldReduceMotion]);
+  }, [isNavigating, nextRoute, phase, router, session?.selectedStationName, shouldReduceMotion]);
 
   function handleSelectCategory(category: PlaceCategoryConfig) {
     setSession((current) => {
@@ -198,7 +230,92 @@ export function ChatView() {
         return current;
       }
 
-      return applyResolvedCategory(current, category);
+      return {
+        ...current,
+        isAssistantLoading: true,
+        messages: [
+          ...current.messages,
+          {
+            content: category.label,
+            id: `user-category-${category.id}-${Date.now()}`,
+            role: "user",
+          },
+        ],
+        pendingActivityLabel: category.label,
+        pendingCategoryId: category.id,
+        phase: "awaiting-assistant-reply",
+        recommendationRoute: category.route,
+      };
+    });
+  }
+
+  function handleConfirmSearch() {
+    setSession((current) => {
+      if (!current || current.phase !== "awaiting-search-confirmation" || !current.pendingCategoryId) {
+        return current;
+      }
+
+      const category = placeCategories[current.pendingCategoryId];
+
+      return {
+        ...current,
+        isNavigating: true,
+        phase: "candidate-navigation-pending",
+        recommendationRoute: category.route,
+        selectedStationName: current.pendingLocationName,
+      };
+    });
+  }
+
+  function handleReviewCandidates() {
+    setSession((current) => {
+      if (!current || current.phase !== "awaiting-search-confirmation") {
+        return current;
+      }
+
+      return {
+        ...current,
+        phase: "showing-route-choices",
+      };
+    });
+  }
+
+  function handleFeedbackStart() {
+    setSession((current) =>
+      current && current.phase === "showing-route-choices" ? { ...current, phase: "collecting-feedback" } : current,
+    );
+  }
+
+  function handleAlternativeCategory(category: PlaceCategoryConfig) {
+    setSession((current) => {
+      if (!current || current.phase !== "showing-route-choices" || current.isNavigating) {
+        return current;
+      }
+
+      return {
+        ...current,
+        isNavigating: true,
+        pendingActivityLabel: category.label,
+        pendingCategoryId: category.id,
+        phase: "candidate-navigation-pending",
+        recommendationRoute: category.route,
+        selectedStationName: current.pendingLocationName,
+      };
+    });
+  }
+
+  function handleFeedbackSubmit() {
+    setSession((current) => {
+      if (!current || current.phase !== "collecting-feedback" || !current.feedbackText?.trim()) {
+        return current;
+      }
+
+      // TODO: スプレッドシート連携時は、この入力を専用APIへ送信する。
+      return {
+        ...current,
+        feedbackSubmitted: true,
+        feedbackText: current.feedbackText.trim(),
+      };
     });
   }
 
@@ -277,6 +394,78 @@ export function ChatView() {
             </div>
             {phase === "awaiting-user-choice" ? (
               <CategoryChoices disabled={isNavigating} onSelect={handleSelectCategory} />
+            ) : phase === "awaiting-search-confirmation" ? (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto flex w-full max-w-3xl flex-wrap gap-2"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.4, 0, 0.2, 1] }}
+                role="group"
+                aria-label="店舗探しを確認する"
+              >
+                <button
+                  className="rounded-control bg-coffee px-4 py-2 text-sm font-medium text-cream shadow-plate transition-colors hover:bg-seal disabled:cursor-default disabled:opacity-50"
+                  disabled={isNavigating}
+                  onClick={handleConfirmSearch}
+                  type="button"
+                >
+                  はい
+                </button>
+                <button
+                  className="rounded-control border border-line bg-cream px-4 py-2 text-sm text-ink shadow-plate transition-colors hover:border-coffee/40 hover:bg-paper disabled:cursor-default disabled:opacity-50"
+                  disabled={isNavigating}
+                  onClick={handleReviewCandidates}
+                  type="button"
+                >
+                  もう少し検討する
+                </button>
+              </motion.div>
+            ) : phase === "showing-route-choices" ? (
+              <CategoryChoices
+                ariaLabel="店舗ページを選ぶ"
+                disabled={isNavigating}
+                onMissing={handleFeedbackStart}
+                onSelect={handleAlternativeCategory}
+              />
+            ) : phase === "collecting-feedback" ? (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="mx-auto flex w-full max-w-3xl flex-col gap-3 rounded-card border border-line bg-paper/80 p-5 shadow-plate"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+                transition={{ duration: shouldReduceMotion ? 0.2 : 0.42, ease: [0.4, 0, 0.2, 1] }}
+              >
+                {session.feedbackSubmitted ? (
+                  <p className="text-sm leading-7 text-ink/70">
+                    教えてくれてありがとうございます。今後の候補づくりに使います。
+                  </p>
+                ) : (
+                  <>
+                    <label className="text-sm font-medium text-coffee" htmlFor="missing-place-feedback">
+                      何の店舗があると嬉しいですか？
+                    </label>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <input
+                        className="min-h-11 flex-1 rounded-control border border-line bg-cream px-4 text-sm text-ink outline-none transition placeholder:text-ink/36 focus:border-coffee/45 focus:ring-2 focus:ring-seal/25"
+                        id="missing-place-feedback"
+                        onChange={(event) => {
+                          setSession((current) => (current ? { ...current, feedbackText: event.target.value } : current));
+                        }}
+                        placeholder="例：ひとりで入りやすい蕎麦屋"
+                        type="text"
+                        value={session.feedbackText ?? ""}
+                      />
+                      <button
+                        className="min-h-11 rounded-control bg-coffee px-5 text-sm font-medium text-cream transition-colors hover:bg-seal disabled:cursor-default disabled:opacity-50"
+                        disabled={!session.feedbackText?.trim()}
+                        onClick={handleFeedbackSubmit}
+                        type="button"
+                      >
+                        送信
+                      </button>
+                    </div>
+                  </>
+                )}
+              </motion.div>
             ) : (
               <ChatComposer
                 disabled={isComposerDisabled}

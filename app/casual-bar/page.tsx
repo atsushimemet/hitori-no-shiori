@@ -1,11 +1,17 @@
 import { PlaceListView } from "@/components/place/PlaceListView";
 import { getRandomPlacesByCategorySlug } from "@/lib/places";
 import { placeCategories } from "@/lib/placeCategories";
+import { getRequestedStation, type PlaceSearchParams } from "@/lib/searchParams";
 
 export const dynamic = "force-dynamic";
 
-export default async function CasualBarPage() {
-  const category = await getRandomPlacesByCategorySlug(placeCategories.casualBar);
+type CasualBarPageProps = {
+  searchParams?: PlaceSearchParams;
+};
 
-  return <PlaceListView category={category} />;
+export default async function CasualBarPage({ searchParams }: CasualBarPageProps) {
+  const requestedStation = await getRequestedStation(searchParams);
+  const category = await getRandomPlacesByCategorySlug(placeCategories.casualBar, 3, requestedStation);
+
+  return <PlaceListView category={category} requestedStation={requestedStation} />;
 }

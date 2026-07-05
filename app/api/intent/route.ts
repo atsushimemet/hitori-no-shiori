@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { resolveIntent, type IntentMessage } from "@/lib/intentResolution";
-import { placeCategories, resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
+import { placeCategories, type PlaceCategoryConfig } from "@/lib/placeCategories";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ const CHOOSE_MESSAGE = "うまく絞りきれませんでした。よければ�
 const ALL_CATEGORY_IDS = Object.keys(placeCategories);
 
 type IntentResponse =
-  | { categoryId: string; source?: "fallback"; status: "resolved" }
+  | { activityLabel: string; categoryId: string; locationName: string; source?: "fallback"; status: "resolved" }
   | { assistantMessage: string; status: "question" }
   | { assistantMessage: string; categoryIds: string[]; status: "choose" };
 
@@ -30,15 +30,86 @@ function isIntentMessage(value: unknown): value is IntentMessage {
   );
 }
 
-// LLM が使えないとき、または聞き返しの上限を超えたときのキーワードフォールバック。
-// 聞き返し後の確定にも対応できるよう、ユーザーの全発言を結合して判定する。
-function resolveByKeyword(messages: IntentMessage[]): IntentResponse {
-  const userText = messages
+function normalizeLocationName(locationName: string) {
+  return locationName.trim().replace(/駅$/, "");
+}
+
+function resolveCategoryByKeyword(userText: string): PlaceCategoryConfig | null {
+  const normalizedText = userText.toLowerCase();
+  let bestCategory: PlaceCategoryConfig | null = null;
+  let bestScore = 0;
+
+  for (const category of Object.values(placeCategories)) {
+    const score = category.keywords.reduce(
+      (count, keyword) => (normalizedText.includes(keyword.toLowerCase()) ? count + 1 : count),
+      0,
+    );
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestCategory = category;
+    }
+  }
+
+  return bestCategory;
+}
+
+function resolveLocationByText(userText: string): string | null {
+  const knownLocations = Array.from(
+    new Set(
+      Object.values(placeCategories).flatMap((category) =>
+        category.places.map((place) => normalizeLocationName(place.station)),
+      ),
+    ),
+  ).sort((a, b) => b.length - a.length);
+
+  const knownLocation = knownLocations.find((location) => userText.includes(location));
+  if (knownLocation) {
+    return knownLocation;
+  }
+
+  const explicitAreaMatch = userText.match(/([一-龠々ぁ-んァ-ヶーA-Za-z0-9]+)駅(?:で|周辺|あたり|近辺|付近)?/);
+
+  if (explicitAreaMatch?.[1]) {
+    return normalizeLocationName(explicitAreaMatch[1]);
+  }
+
+  return null;
+}
+
+function buildUserText(messages: IntentMessage[]) {
+  return messages
     .filter((message) => message.role === "user")
     .map((message) => message.content)
     .join(" ");
-  const category = resolvePlaceCategoryForMessage(userText);
-  return { categoryId: category.id, source: "fallback", status: "resolved" };
+}
+
+// LLM が使えないときのキーワードフォールバック。
+// カテゴリと場所の両方が取れた場合だけ resolved にする。
+function resolveByKeyword(messages: IntentMessage[]): IntentResponse {
+  const userText = buildUserText(messages);
+  const category = resolveCategoryByKeyword(userText);
+  const locationName = resolveLocationByText(userText);
+
+  if (!category && !locationName) {
+    return { assistantMessage: "どんなことを、どのあたりでしてみたいですか？", status: "question" };
+  }
+
+  if (!category) {
+    return { assistantMessage: `${locationName}で、どんなお店を探したいですか？`, status: "question" };
+  }
+
+  if (!locationName) {
+    return { assistantMessage: `${category.label}なら、どのあたりで探しましょうか？`, status: "question" };
+  }
+
+  return {
+    activityLabel: category.label,
+    categoryId: category.id,
+    locationName,
+    source: "fallback",
+    status: "resolved",
+  };
 }
 
 export async function POST(request: Request) {
@@ -70,6 +141,11 @@ export async function POST(request: Request) {
   }
 
   if (result.status === "question") {
+    const keywordResult = resolveByKeyword(messages);
+    if (keywordResult.status === "resolved") {
+      return NextResponse.json<IntentResponse>(keywordResult);
+    }
+
     // 上限に達していなければ、もう一度聞き返す。
     if (clarifyingQuestionCount < MAX_CLARIFYING_QUESTIONS) {
       return NextResponse.json<IntentResponse>({ assistantMessage: result.assistantMessage, status: "question" });
@@ -82,5 +158,18 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json<IntentResponse>({ categoryId: result.categoryId, status: "resolved" });
+  const userLocationName = resolveLocationByText(buildUserText(messages));
+  if (!userLocationName) {
+    return NextResponse.json<IntentResponse>({
+      assistantMessage: `${result.activityLabel}なら、どの駅の近くで探しましょうか？`,
+      status: "question",
+    });
+  }
+
+  return NextResponse.json<IntentResponse>({
+    activityLabel: result.activityLabel,
+    categoryId: result.categoryId,
+    locationName: userLocationName,
+    status: "resolved",
+  });
 }

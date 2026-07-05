@@ -1,9 +1,11 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Eye, EyeOff, Lock, LogOut, Plus, RefreshCw, Save, Trash2 } from "lucide-react";
 import type { AdminCategory, AdminPlace } from "@/lib/adminPlaces";
 import { Button } from "@/components/ui/Button";
+import { duration, ease } from "@/components/motion/tokens";
 import { cn } from "@/lib/cn";
 
 type AdminPlaceForm = {
@@ -19,6 +21,12 @@ type AdminPlaceForm = {
   seatInfo: string;
   station: string;
   walkMinutes: string;
+};
+
+type Toast = {
+  id: number;
+  text: string;
+  tone: "success" | "error";
 };
 
 type AdminPlaceManagerProps = {
@@ -115,7 +123,35 @@ export function AdminPlaceManager({
   });
   const [query, setQuery] = useState("");
   const [message, setMessage] = useState(setupError);
+  const [toast, setToast] = useState<Toast | null>(null);
   const [isBusy, setIsBusy] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [formScrollRequest, setFormScrollRequest] = useState(0);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timer = setTimeout(() => setToast(null), 4000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+
+  function showToast(text: string, tone: Toast["tone"] = "success") {
+    setToast({ id: Date.now(), text, tone });
+  }
+
+  // メッセージ消去などの再レンダーで座標がずれないよう、描画後にスクロールする。
+  useEffect(() => {
+    // lg以上ではフォームがリストの横に見えているためスクロール不要。
+    if (formScrollRequest === 0 || window.matchMedia("(min-width: 1024px)").matches) {
+      return;
+    }
+
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    formRef.current?.scrollIntoView({ behavior: reduceMotion ? "auto" : "smooth", block: "start" });
+  }, [formScrollRequest]);
 
   const selectedPlace = useMemo(
     () => places.find((place) => place.id === selectedId),
@@ -183,9 +219,25 @@ export function AdminPlaceManager({
       setPassword("");
       setIsAuthenticated(true);
       await refreshPlaces();
-      setMessage("ログインしました。");
+      showToast("ログインしました。");
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "ログインできませんでした。");
+    } finally {
+      setIsBusy(false);
+    }
+  }
+
+  async function handleRefresh() {
+    setIsBusy(true);
+
+    try {
+      await refreshPlaces();
+      showToast("再読み込みしました。");
+    } catch (error) {
+      showToast(
+        error instanceof Error ? error.message : "店舗データを取得できませんでした。",
+        "error",
+      );
     } finally {
       setIsBusy(false);
     }
@@ -202,22 +254,27 @@ export function AdminPlaceManager({
     setIsBusy(false);
   }
 
+  function scrollFormIntoView() {
+    setFormScrollRequest((current) => current + 1);
+  }
+
   function startNewPlace() {
     setSelectedId("new");
     setForm({ ...blankForm, categoryId: categories[0]?.id ?? "" });
     setMessage("");
+    scrollFormIntoView();
   }
 
   function selectPlace(place: AdminPlace) {
     setSelectedId(place.id);
     setForm(toForm(place));
     setMessage("");
+    scrollFormIntoView();
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsBusy(true);
-    setMessage("");
 
     try {
       const isNew = selectedId === "new";
@@ -233,9 +290,9 @@ export function AdminPlaceManager({
       }
 
       await refreshPlaces();
-      setMessage("保存しました。");
+      showToast("保存しました。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "保存できませんでした。");
+      showToast(error instanceof Error ? error.message : "保存できませんでした。", "error");
     } finally {
       setIsBusy(false);
     }
@@ -247,7 +304,6 @@ export function AdminPlaceManager({
     }
 
     setIsBusy(true);
-    setMessage("");
 
     try {
       const response = await fetch(`/api/admin/places/${selectedId}`, { method: "DELETE" });
@@ -258,9 +314,9 @@ export function AdminPlaceManager({
       }
 
       await refreshPlaces();
-      setMessage("削除しました。");
+      showToast("削除しました。");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "削除できませんでした。");
+      showToast(error instanceof Error ? error.message : "削除できませんでした。", "error");
     } finally {
       setIsBusy(false);
     }
@@ -317,7 +373,7 @@ export function AdminPlaceManager({
             <h1 className="mt-2 font-serif text-3xl leading-tight text-coffee">店舗リスト管理</h1>
           </div>
           <div className="flex gap-2">
-            <button className={iconButtonClassName} disabled={isBusy} onClick={refreshPlaces} type="button">
+            <button className={iconButtonClassName} disabled={isBusy} onClick={handleRefresh} type="button">
               <RefreshCw size={18} />
               <span className="sr-only">再読み込み</span>
             </button>
@@ -373,7 +429,7 @@ export function AdminPlaceManager({
         </div>
       </aside>
 
-      <form className="plate min-w-0 overflow-hidden" onSubmit={handleSubmit}>
+      <form className="plate min-w-0 overflow-hidden" onSubmit={handleSubmit} ref={formRef}>
         <div className="grid min-w-0 gap-5 p-4 sm:p-5 lg:grid-cols-2">
           <Field label="店名">
             <input className={inputClassName} onChange={(event) => updateField("name", event.target.value)} required value={form.name} />
@@ -465,6 +521,30 @@ export function AdminPlaceManager({
           </button>
         </div>
       </form>
+
+      <AnimatePresence>
+        {toast ? (
+          <motion.div
+            animate={{ opacity: 1, y: 0 }}
+            className="pointer-events-none fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-50 flex justify-center px-4"
+            exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 8 }}
+            initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 16 }}
+            key={toast.id}
+            role="status"
+            transition={{ duration: duration.micro * 1.5, ease: ease.soft }}
+          >
+            <p
+              className={cn(
+                "plate relative py-3 pl-6 pr-5 text-sm leading-6",
+                toast.tone === "error" ? "text-seal-deep" : "text-ink",
+              )}
+            >
+              <span aria-hidden="true" className="ribbon absolute left-2.5 top-0 h-4" />
+              {toast.text}
+            </p>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

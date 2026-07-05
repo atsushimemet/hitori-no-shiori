@@ -12,6 +12,10 @@ export type ChatSessionPhase =
   | "awaiting-user-reply"
   | "awaiting-user-choice"
   | "collecting-feedback"
+  | "awaiting-assistant-question"
+  | "awaiting-user-location"
+  | "awaiting-assistant-list"
+  | "recommendations-preview"
   | "recommendations-ready"
   | "showing-route-choices"
   | "candidate-navigation-pending";
@@ -43,6 +47,10 @@ const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
   "awaiting-user-reply",
   "awaiting-user-choice",
   "collecting-feedback",
+  "awaiting-assistant-question",
+  "awaiting-user-location",
+  "awaiting-assistant-list",
+  "recommendations-preview",
   "recommendations-ready",
   "showing-route-choices",
   "candidate-navigation-pending",
@@ -185,7 +193,7 @@ function isRecommendationRoute(route: unknown): route is RecommendationRoute {
 
 function normalizeRestoredChatSession(session: ChatSession): ChatSession {
   // 遷移直前で離脱した状態はリスト表示済み（recommendations-ready）に戻す。
-  if (session.phase === "candidate-navigation-pending") {
+  if (session.phase === "candidate-navigation-pending" || session.phase === "recommendations-preview") {
     return {
       ...session,
       isAssistantLoading: false,
@@ -196,11 +204,16 @@ function normalizeRestoredChatSession(session: ChatSession): ChatSession {
 
   // LLM 応答待ちで離脱した状態は、再マウント時に ChatView が再送信して復帰できるよう、
   // ローディング表示を維持する。
-  if (session.phase === "awaiting-assistant-reply") {
+  if (
+    session.phase === "awaiting-assistant-reply" ||
+    session.phase === "awaiting-assistant-question" ||
+    session.phase === "awaiting-assistant-list"
+  ) {
     return {
       ...session,
       isAssistantLoading: true,
       isNavigating: false,
+      phase: "awaiting-assistant-reply",
     };
   }
 
@@ -210,12 +223,14 @@ function normalizeRestoredChatSession(session: ChatSession): ChatSession {
     session.phase === "awaiting-user-choice" ||
     session.phase === "awaiting-search-confirmation" ||
     session.phase === "showing-route-choices" ||
-    session.phase === "collecting-feedback"
+    session.phase === "collecting-feedback" ||
+    session.phase === "awaiting-user-location"
   ) {
     return {
       ...session,
       isAssistantLoading: false,
       isNavigating: false,
+      phase: session.phase === "awaiting-user-location" ? "awaiting-user-reply" : session.phase,
     };
   }
 

@@ -4,6 +4,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Bookmark } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { usePlaceFollowupFlow } from "@/hooks/usePlaceFollowupFlow";
+import { buildGoogleCalendarUrl } from "@/lib/calendar";
 import { cn } from "@/lib/cn";
 import type { Place, PlaceCategoryConfig } from "@/lib/placeCategories";
 
@@ -81,7 +82,13 @@ export function PlaceFollowupFlow({
   } = usePlaceFollowupFlow(places);
 
   const selectedPlace = places.find((place) => place.name === selectedPlaceName);
-  const isLoading = step === "calendar_loading";
+  const selectedPlaceCalendarUrl = selectedPlace
+    ? buildGoogleCalendarUrl({
+        details: `${category.label}｜${selectedPlace.station}（徒歩${selectedPlace.walkMinutes}分）｜${datetimeText}`,
+        location: selectedPlace.googleMapUrl || selectedPlace.mapUrl || selectedPlace.station,
+        title: selectedPlace.name,
+      })
+    : "#";
   const hasInterest = step !== "ask_interest" && step !== "undecided";
 
   function handleCustomTimeSubmit(event: FormEvent<HTMLFormElement>) {
@@ -167,7 +174,7 @@ export function PlaceFollowupFlow({
             </FollowupQuestion>
           ) : null}
 
-          {(step === "confirm_calendar" || step === "calendar_loading") && selectedPlace ? (
+          {step === "confirm_calendar" && selectedPlace ? (
             <FollowupQuestion key="confirm-calendar">
               <p className="eyebrow">Google Calendarに予定を登録しますか？</p>
               <div className="mt-4 grid gap-2 text-sm leading-7 text-ink/74">
@@ -181,17 +188,17 @@ export function PlaceFollowupFlow({
                 </p>
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
-                <button
-                  className="inline-flex min-h-11 items-center justify-center rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isLoading}
+                <a
+                  className="inline-flex min-h-11 items-center justify-center rounded-control bg-coffee px-5 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper"
+                  href={selectedPlaceCalendarUrl}
                   onClick={addToCalendar}
-                  type="button"
+                  rel="noreferrer"
+                  target="_blank"
                 >
-                  {isLoading ? "栞をはさんでいます" : "Google Calendarに登録する"}
-                </button>
+                  Google Calendarに登録する
+                </a>
                 <button
                   className="inline-flex min-h-11 items-center justify-center rounded-control border border-line px-5 text-sm font-medium text-ink/70 transition hover:border-bark/40 hover:text-ink focus:outline-none focus:ring-2 focus:ring-seal/25 focus:ring-offset-2 focus:ring-offset-paper disabled:cursor-not-allowed disabled:opacity-60"
-                  disabled={isLoading}
                   onClick={deferCalendar}
                   type="button"
                 >
@@ -262,16 +269,30 @@ export function PlaceFollowupFlow({
                         <p className="mt-1 break-words text-sm text-bark">
                           {recommendation.station}｜徒歩{recommendation.walkMinutes}分
                         </p>
-                        {recommendation.googleMapUrl ? (
+                        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                           <a
-                            className="mt-2 inline-flex text-sm font-medium tracking-[0.02em] text-seal transition-colors hover:text-seal-deep"
-                            href={recommendation.googleMapUrl}
+                            className="inline-flex min-h-9 items-center justify-center rounded-control bg-coffee px-4 text-sm font-medium text-cream transition hover:bg-ink focus:outline-none focus:ring-2 focus:ring-seal/30 focus:ring-offset-2 focus:ring-offset-paper"
+                            href={buildGoogleCalendarUrl({
+                              details: `${recommendation.categoryLabel}｜${recommendation.line}沿線 ${recommendation.station}（徒歩${recommendation.walkMinutes}分）`,
+                              location: recommendation.googleMapUrl || recommendation.station,
+                              title: recommendation.name,
+                            })}
                             rel="noreferrer"
                             target="_blank"
                           >
-                            Google Map で開く
+                            Google Calendarに登録する
                           </a>
-                        ) : null}
+                          {recommendation.googleMapUrl ? (
+                            <a
+                              className="inline-flex text-sm font-medium tracking-[0.02em] text-seal transition-colors hover:text-seal-deep"
+                              href={recommendation.googleMapUrl}
+                              rel="noreferrer"
+                              target="_blank"
+                            >
+                              Google Map で開く
+                            </a>
+                          ) : null}
+                        </div>
                       </li>
                     ))}
                   </ul>

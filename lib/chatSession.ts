@@ -10,6 +10,7 @@ export type ChatSessionPhase =
   | "awaiting-assistant-question"
   | "awaiting-user-location"
   | "awaiting-assistant-list"
+  | "recommendations-preview"
   | "recommendations-ready"
   | "candidate-navigation-pending";
 
@@ -33,6 +34,7 @@ const CHAT_SESSION_PHASES: ChatSessionPhase[] = [
   "awaiting-assistant-question",
   "awaiting-user-location",
   "awaiting-assistant-list",
+  "recommendations-preview",
   "recommendations-ready",
   "candidate-navigation-pending",
 ];
@@ -160,7 +162,7 @@ function isRecommendationRoute(route: unknown): route is RecommendationRoute {
 }
 
 function normalizeRestoredChatSession(session: ChatSession): ChatSession {
-  if (session.phase !== "candidate-navigation-pending") {
+  if (session.phase !== "candidate-navigation-pending" && session.phase !== "recommendations-preview") {
     return session;
   }
 

@@ -17,6 +17,7 @@ import { mockInitialUserMessage } from "@/lib/mockChat";
 import { resolvePlaceCategoryForMessage } from "@/lib/placeCategories";
 
 const ASSISTANT_REPLY_DELAY = 1500;
+const RECOMMENDATION_PREVIEW_DELAY = 2500;
 const ROUTE_TRANSITION_DELAY = 1200;
 
 export function ChatView() {
@@ -114,7 +115,6 @@ export function ChatView() {
           return {
             ...current,
             isAssistantLoading: false,
-            isNavigating: true,
             messages: hasAssistantListMessage
               ? current.messages
               : [
@@ -125,7 +125,7 @@ export function ChatView() {
                     role: "assistant",
                   },
                 ],
-            phase: "candidate-navigation-pending",
+            phase: "recommendations-preview",
           };
         });
       },
@@ -134,6 +134,31 @@ export function ChatView() {
 
     return () => window.clearTimeout(timeout);
   }, [assistantListMessage, category.id, isAssistantLoading, phase, shouldReduceMotion]);
+
+  useEffect(() => {
+    if (phase !== "recommendations-preview" || isNavigating) {
+      return;
+    }
+
+    const timeout = window.setTimeout(
+      () => {
+        setSession((current) => {
+          if (!current || current.phase !== "recommendations-preview" || current.isNavigating) {
+            return current;
+          }
+
+          return {
+            ...current,
+            isNavigating: true,
+            phase: "candidate-navigation-pending",
+          };
+        });
+      },
+      shouldReduceMotion ? 700 : RECOMMENDATION_PREVIEW_DELAY,
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [isNavigating, phase, shouldReduceMotion]);
 
   useEffect(() => {
     if (phase !== "candidate-navigation-pending" || !isNavigating) {

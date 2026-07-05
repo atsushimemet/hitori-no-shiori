@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { parsePlannedTimeText, timeInputValueToDate } from "@/lib/calendar";
 import type { Place } from "@/lib/placeCategories";
 import type { RecommendedPlace } from "@/lib/recommendations";
 
@@ -18,11 +19,12 @@ export function usePlaceFollowupFlow(places: Place[]) {
   const [step, setStep] = useState<PlaceFollowupStep>("ask_interest");
   const [selectedPlaceName, setSelectedPlaceName] = useState("");
   const [datetimeText, setDatetimeText] = useState("");
+  const [datetimeValue, setDatetimeValue] = useState<Date | null>(null);
   const [customTime, setCustomTime] = useState("");
   const [recommendations, setRecommendations] = useState<RecommendedPlace[]>([]);
   const [recommendationStatus, setRecommendationStatus] = useState<RecommendationStatus>("idle");
 
-  const canConfirmTime = useMemo(() => customTime.trim().length > 0, [customTime]);
+  const canConfirmTime = useMemo(() => timeInputValueToDate(customTime) !== null, [customTime]);
 
   function chooseInterest(hasInterest: boolean) {
     setStep(hasInterest ? "select_place" : "undecided");
@@ -35,14 +37,16 @@ export function usePlaceFollowupFlow(places: Place[]) {
 
   function chooseTime(timeText: string) {
     setDatetimeText(timeText);
+    setDatetimeValue(parsePlannedTimeText(timeText));
     setCustomTime("");
     setStep("confirm_calendar");
   }
 
   function confirmCustomTime() {
-    const nextTime = customTime.trim();
+    const nextTime = timeInputValueToDate(customTime);
     if (!nextTime) return;
-    setDatetimeText(nextTime);
+    setDatetimeText(`今日 ${customTime}`);
+    setDatetimeValue(nextTime);
     setStep("confirm_calendar");
   }
 
@@ -96,6 +100,7 @@ export function usePlaceFollowupFlow(places: Place[]) {
     confirmCustomTime,
     customTime,
     datetimeText,
+    datetimeValue,
     deferCalendar,
     recommendationStatus,
     recommendations,
